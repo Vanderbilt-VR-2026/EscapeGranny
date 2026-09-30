@@ -117,3 +117,9 @@ Icon?
 *.7z
 .fake
 __MACOSX/
+
+# Unity Android build leftovers
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*_BurstDebugInformation_DoNotShip/
+/Builds/
+*.apk
