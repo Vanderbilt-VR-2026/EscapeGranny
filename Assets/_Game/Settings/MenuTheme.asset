@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b76a2f2918cb40b2a3071d3c2743c9c, type: 3}
+  m_Name: MenuTheme
+  m_EditorClassIdentifier: Assembly-CSharp::MenuTheme
+  displayFont: {fileID: 12800000, guid: 9788ec3615fda45fc95c220f4a79f425, type: 3}
+  bodyFont: {fileID: 12800000, guid: e473f5b89f9ef4d9d9a47007c69ab987, type: 3}
+  bloodRed: {r: 0.6509804, g: 0.18431373, b: 0.13725491, a: 1}
+  darkBrown: {r: 0.19215687, g: 0.13333334, b: 0.047058824, a: 1}
+  charcoal: {r: 0.10980392, g: 0.12941177, b: 0.1254902, a: 1}
+  navy: {r: 0.047058824, g: 0.105882354, b: 0.19215687, a: 1}
+  mustard: {r: 0.5882353, g: 0.47058824, b: 0, a: 1}
+  bone: {r: 0.9098039, g: 0.88235295, b: 0.827451, a: 1}
+  ash: {r: 0.64705884, g: 0.61960787, b: 0.5647059, a: 1}
+  takenGrey: {r: 0.25, g: 0.25, b: 0.25, a: 0.6}
+  titleSize: 88
+  headingSize: 40
+  actionLabelSize: 52
+  optionLabelSize: 38
+  bodySize: 28
+  homeTagline: Two players. One key. Five minutes.
