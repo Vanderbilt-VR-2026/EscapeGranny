@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 2f6004cfb6b36024cb775858dae3e97e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 268300
+  packageName: Axe Realistic PBR free
+  packageVersion: 1.0
+  assetPath: Assets/Julliretta 3D/Axe Realistic PBR/HDRP/Scripts/RotateObjectHDRP.cs
+  uploadId: 621220
