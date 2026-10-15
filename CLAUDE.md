@@ -6,151 +6,164 @@ Team roles are in `README.md`. Design sources: the Project Proposal slides, the 
 doc, and `floor_plan.pdf` (repo root) — if this file and those disagree, ask the team.
 
 ## The game in one minute
-- **Two players, two roles.** One is **Granny** (hunter), one is the **Prisoner** (hunted). The prisoner is
-  intentionally at a disadvantage.
-- **Prisoner wins** by finding the key and unlocking the **front door** with it, then walking out.
-- **Granny wins** by killing the prisoner. **Prisoner also loses** if the **5-minute timer** runs out.
-- **Flow:** both headsets open on the same home screen → point at PLAY → pick a role portrait → START.
-  A claimed role greys out for the other player, so the two always end up on opposite sides.
-- Granny and prisoner each spawn in a **random room** (different rooms). The key spawns at a **random spot**
-  from a fixed list of key locations.
-
-### Granny
-- Picks **one weapon** at the start from a wall (axe, knife, gun, bomb) and **can't change it**.
-  - Axe / knife = near (must be within arm's reach; swing or thrust to kill).
-  - Gun = far, limited ammo. Bomb = far, thrown at a target.
-- Has full lighting. Moves at **0.75× speed**. Doesn't know where the key is.
-- **Map button:** opens the house floor plan and shows where the prisoner is. Usable **once every 30 s**.
-- **Milestone 2:** point at a room on the map to **teleport** there (30 s cooldown). Each teleport plays a
-  **spatial sound** — loud if the prisoner is nearby, faint if far away.
-
-### Prisoner
-- No weapons or powers. Sees only through a **spotlight** (dark house).
-- Opens doors (grab and twist the knob) and drawers (grab the handle and pull back), grabs the key,
-  **hides** (under beds, in wardrobes, etc.), and inserts the key into the front door.
-
-### Sound rules (important for stealth)
-- Opening any door or drawer makes a sound. Dropping the key makes a sound.
-- Certain floor areas **creak** when the prisoner walks on them (locations TBD).
-- Windows and outside doors can't be opened, except the front door with the key.
-
-### Milestones
-- **Milestone 1:** home screen and role select, random key placement, weapon choice, creaky floors,
-  doors and drawers, hiding, map with the prisoner's location, win and lose conditions, 5-minute timer.
-- **Milestone 2:** Granny map teleport and spatial audio, five-day system, Granny stair lift.
-- **Ideas backlog (not committed):** bear traps, stamina bar, prisoner assembles a shotgun,
-  weapon cooldown, "don't move" mechanic, extra items (screwdriver, codes).
+- **Two players, two roles.** **Granny** (hunter) and the **Prisoner** (hunted, intentionally disadvantaged).
+- **Prisoner wins** by finding the key, unlocking the **front door** with it, and walking out.
+  **Granny wins** by killing the prisoner. The prisoner also loses if the **5-minute timer** runs out.
+- **Flow:** home screen → PLAY → pick a role portrait → START. A claimed role greys out for the other player.
+- Granny and prisoner spawn in **different random rooms**; the key spawns at a random spot from a fixed list.
+- **Granny:** picks **one weapon** (axe, knife = near; gun = far, limited ammo; bomb = thrown) and can't change
+  it. Full lighting, **0.75× speed**, doesn't know where the key is. **Map button** shows the prisoner's
+  location, **once every 30 s**. *Milestone 2:* point at a map room to **teleport** (30 s cooldown), with a
+  **spatial sound** that is loud if the prisoner is near and faint if far.
+- **Prisoner:** no weapons. Sees only by **spotlight**. Opens doors (grab and twist the knob) and drawers (pull
+  the handle), grabs the key, **hides** (under beds, in wardrobes), and inserts the key in the front door.
+- **Sound rules:** opening doors or drawers and dropping the key make sounds; some floor areas **creak**
+  (locations TBD). Windows and outside doors can't be opened, except the front door with the key.
+- **Milestone 1:** menu and role select, random key, weapon choice, creaky floors, doors and drawers, hiding,
+  map, win and lose conditions, 5-minute timer. **Milestone 2:** map teleport and spatial audio, five-day
+  system, Granny stair lift. **Backlog (not committed):** bear traps, stamina, shotgun parts, weapon cooldown.
 
 ## Tech stack (don't change without asking the team)
 | Thing | What we use |
 |---|---|
-| Unity version | **6000.3.23f1** (Unity 6.3). Install this exact version through **Unity Hub**, with **Android Build Support**. |
-| Render pipeline | URP (Universal Render Pipeline) |
-| VR interaction | **XR Interaction Toolkit (XRI) 3.3.2** on OpenXR. Use XRI components (XR Origin, XR Grab Interactable, XR Simple Interactable, sockets). Do **not** mix in Meta Interaction SDK rigs (OVRCameraRig, HandGrab), even though that package is installed. |
-| Hand tracking | XR Hands 1.9 |
-| Level building | ProBuilder, and `Assets/Editor/HouseBuilder.cs` for the house |
-| Input | New Input System (`InputSystem_Actions.inputactions`) |
-| Multiplayer | **Not decided yet.** Don't install a networking package on your own; raise it with Divija (networking lead). |
-| Target device | Meta Quest (Android build) |
+| Unity | **6000.3.23f1** (Unity 6.3), installed via **Unity Hub** with **Android Build Support** |
+| Render pipeline | URP 17.3 |
+| VR interaction | **XR Interaction Toolkit (XRI) 3.3.2** on OpenXR 1.16. Use XRI components (XR Origin, XR Grab/Simple Interactable, sockets). Do **not** use Meta Interaction SDK rigs (OVRCameraRig, HandGrab), even though `com.meta.xr.sdk.*` 205 is installed. |
+| Hand tracking / input | XR Hands 1.9; New Input System 1.20 (`InputSystem_Actions.inputactions`) |
+| Multiplayer | **Photon Fusion 2, Shared mode** (in `Assets/Photon/`) + **Photon Voice for Fusion** (git UPM package in `Packages/manifest.json`). Networking lead: Divija. Don't add other networking packages. |
+| Level building | ProBuilder 6.1; editor tools in `Assets/Editor/` and `Assets/_Game/Editor/` |
+| Target device | Meta Quest 3 (Android build) |
 
 ## Unity crash course (for first-timers)
-- **Scene** (`.unity`): a level. Contains **GameObjects** (anything in the world).
-- **Component:** something attached to a GameObject that gives it behaviour, e.g. a Collider,
-  a Rigidbody (physics), an AudioSource, or your own C# script.
-- **Prefab** (`.prefab`): a saved, reusable GameObject (e.g. a Drawer). Edit the prefab once and every
-  copy updates. **Build things as prefabs**, not by editing the shared scene directly.
-- **Scripts:** C# classes that inherit from `MonoBehaviour`. `Start()` runs once and `Update()` runs every
-  frame. Public or `[SerializeField]` fields show up in the Inspector so designers can tweak them.
-- **Editor windows:** Hierarchy (objects in the scene), Inspector (the selected object's components),
-  Project (files), Scene (edit view), Game (play view), Console (errors and `Debug.Log` output).
-- **Play mode:** changes you make while ▶ Play is on are **thrown away** when you stop. Stop first, then edit.
-- **`.meta` files:** every asset has one, holding its ID. **Always commit them together with the asset.**
-  A missing `.meta` breaks references for everyone else.
-- `Library/`, `Logs/`, `Temp/` and `UserSettings/` are local caches and are git-ignored. Never commit them.
-  If Unity acts weird, close it and delete `Library/`; it rebuilds itself.
+- **Scene** (`.unity`) = a level full of **GameObjects**. **Components** (Collider, Rigidbody, AudioSource,
+  your C# script) give them behaviour. **Prefab** (`.prefab`) = a reusable saved GameObject; build features
+  as prefabs, not by editing the shared scene.
+- Scripts inherit `MonoBehaviour` (`Start()` once, `Update()` every frame); networked scripts inherit Fusion's
+  `NetworkBehaviour` (`Spawned()`, `FixedUpdateNetwork()`, `Render()`). `[SerializeField]` fields show in the Inspector.
+- Changes made during ▶ Play mode are **thrown away**. Stop first, then edit.
+- **`.meta` files** hold asset IDs. **Always commit them with the asset**; a missing `.meta` breaks references.
+- `Library/`, `Logs/`, `Temp/`, `UserSettings/` are git-ignored caches. If Unity acts weird, close it and
+  delete `Library/`.
 
 ## Folder layout
 ```
 Assets/
-  House_Bishal.unity        ← MAIN GAME SCENE (the shared scene everyone builds toward)
-  Editor/HouseBuilder.cs    ← generates the greybox house (editor-only tool)
-  Generated/HouseMaterials/ ← greybox materials made by HouseBuilder
-  Scenes/                   ← older and sample scenes (SampleScene, "scene sept 8")
-  Granny Project.unity      ← older scene
-  Samples/                  ← imported XRI and XR Hands demos. Reference only; don't edit.
-  XR/, XRI/, Oculus/, Settings/, Resources/ ← package and config files. Don't edit unless you know why.
-floor_plan.pdf              ← the official house layout with measurements
+  House_Bishal.unity          ← MAIN GAME SCENE (house, doors, lighting, "Gameplay" root)
+  Scenes/Lobby Scene.unity    ← network lobby (Fusion Network Manager lives here)
+  Scenes/InteractablesSprintOne.unity ← test scene for key, padlock, weapons
+  Scenes/Game Scene.unity, SampleScene, "scene sept 8" ← old / template scenes, not in use
+  _Game/                      ← team code: Scripts/Menu/, Editor/, Scenes/MainMenu.unity,
+                                Settings/MenuTheme.asset, Fonts/, Materials/
+  Scripts/                    ← gameplay scripts (interactables, doors, lights, network interactables)
+  0 Prefabs/                  ← game-ready interactables: Key_Root, Padlock_Root, Bomb_Root, Bullet, flashes
+  Fusion and Essential Spawned Player Stuffs/ ← network player, spawner/lobby prefab, hand presence
+  Editor/HouseBuilder.cs      ← house generator + horror lighting tool
+  Avatars/                    ← GrannyAvatar.fbx + GrannySkin.mat
+  Photon/                     ← Fusion SDK + PhotonAppSettings/NetworkProjectConfig. Don't edit SDK code.
+  ShootingDemo/, Photon/FusionDemos/ ← Fusion sample code; reference only
+  1 Knife … 6 Axe, BathroomPack, Locker_HQ, RawWoodenFurnitureFree, Wooden Boxes, Yughues… ← store assets
+  Samples/, XR/, XRI/, Oculus/, Settings/, Resources/ ← package samples and config; don't edit casually
 ```
-New work goes in `Assets/_Game/` (create it if missing) with subfolders `Scripts/`, `Prefabs/`,
-`Materials/`, `Models/`, `Audio/` and `Scenes/`. Put your personal test scene at `Assets/_Game/Scenes/Test_<YourName>.unity`.
+New work goes in `Assets/_Game/` (`Scripts/`, `Prefabs/`, `Materials/`, `Models/`, `Audio/`, `Scenes/`).
+Personal test scenes: `Assets/_Game/Scenes/Test_<YourName>.unity`.
 
-## The house (greybox)
-- **Don't place walls by hand.** Run **Tools → Escape Granny → Build House** in Unity. It builds everything
-  under a GameObject called `House (generated)`: 3 levels, walls with door gaps, stairs, a roof, door slots,
-  gameplay markers and an `EscapeTrigger` outside the front door. **Remove House** deletes it.
-- ⚠️ **Rebuilding deletes and recreates `House (generated)`.** Anything you drag *inside* it is lost.
-  Put furniture, props and scripts in a **separate root object** (e.g. `Props`, `Gameplay`) instead.
-- To change the layout, edit the numbers in `BuildPlan()` in `HouseBuilder.cs` (keep them in sync with
-  `floor_plan.pdf`), then rebuild.
-- **Coordinates (meters):** (0, 0) is the south-west outer corner, +x is east, +z is north, +y is up.
-  Floors are at y = −3 (basement), 0 (ground) and +3 (upper); the roof is at 6. The house is 18 × 14 m.
-- **Markers** (empty objects with coloured labels in the Scene view) show where things go:
-  `P1–P3` prisoner spawns (green), `G1–G3` Granny spawns (red), `K1–K15` key spots (yellow),
-  `H1–H14` hiding spots (purple). Door slots (`D1_FrontDoor`, `U1_...`) are where door prefabs go;
-  their X scale equals the door width.
-- Stairs have 15 visual steps with **no colliders** plus one invisible ramp collider. Walking over steps in
-  VR is bumpy and causes motion sickness, so keep it that way.
-- Default test position for the player rig: the ground-floor hallway at about (7.5, 0, 6.5).
+## Scenes and build order
+- **Build Settings (enabled):** index **0 = `Scenes/Lobby Scene`**, index **1 = `House_Bishal`**.
+  `FusionPlayerSpawnerAndLobbyController` uses `LobbySceneBuildIndex = 0` and `GameSceneBuildIndex = 1`, so
+  **reordering the build list breaks networking** unless you update the prefab's fields too.
+- `_Game/Scenes/MainMenu.unity` (role and weapon menu) is **not yet wired into the networked flow**: it's
+  disabled in the build list, `MenuController.StartGame()` only logs, and role claims use
+  `LocalRoleClaimService` (Inspector checkboxes fake the other player). The plan is to replace it with a
+  networked `IRoleClaimService` and merge the menu into the lobby flow.
+- `GameSession` (DontDestroyOnLoad singleton) carries `SelectedRole` (`PlayerRole`) and `SelectedWeapon`
+  (`WeaponType`) across scenes. This is the single source of truth for "who is Granny"; read it from there.
 
-## Git workflow (Personal branch → sprint branch → main)
-1. `git switch <your-branch>` (e.g. `divija-dev`, `bishal`, `julia-dev`, `pham_dev`, `yamilet-dev`).
-2. Before starting, bring in the latest sprint work: `git fetch origin` then `git merge origin/sprint-<N>`.
-3. Commit small and often with clear messages: `git add <files>` then `git commit -m "Add drawer prefab"`.
-4. `git push`, then open a **Pull Request into `sprint-<N>`** on GitHub. At the end of a sprint, `sprint-<N>`
-   is merged into `main` by PR. **Never push directly to `main`.**
-5. Don't use `git add .` blindly. Check `git status` first so you don't commit accidental changes to
-   `ProjectSettings/` or scenes you didn't mean to touch.
+## Networking (Photon Fusion 2, Shared mode)
+- **`FusionNetworkManager`** (Lobby scene, DontDestroyOnLoad) owns the `NetworkRunner`, joins session
+  `"Room 1"` (MaxPlayers 2) in `GameMode.Shared`, and auto-reconnects by reloading the Lobby (runners are
+  single-use). It also runs Photon Voice, which is **off while `AppIdVoice` is empty** in
+  `Assets/Photon/Fusion/Resources/PhotonAppSettings.asset` (`AppIdFusion` is set; don't change it).
+- The **shared-mode master client** spawns one **`Fusion Player Spawner and Lobby Controller`** prefab
+  (DontDestroyOnLoad + `SharedModeStateAuthMasterClient`). It assigns players to slots in a networked array,
+  runs the lobby countdown (30 s, or 5 s once the room is full), loads the game scene with
+  `Runner.LoadScene`, and sends everyone back to the Lobby if only one player remains in the game.
+- Each client spawns **its own** `Network Player` avatar (`FusionNetworkPlayer`), which copies the local
+  rig's head and hands every tick and hides its own renderers locally.
+- ⚠️ Scripts find the rig by name: **`GameObject.Find("XR Origin (XR Rig)/Camera Offset/Main Camera")`**
+  (and Left/Right Controller). Every networked scene needs exactly one rig with these exact names.
+- **Grabbable networked objects:** add `XRGrabNetworkInteractable` (needs NetworkObject, NetworkTransform,
+  Rigidbody, XRGrabInteractable, XRGeneralGrabTransformer). Grabbing calls `RequestStateAuthority()`, so tick
+  **Allow State Authority Override** on the NetworkObject. `XRSimpleNetworkInteractable` shows the RPC
+  pattern (`[Rpc(RpcSources.All, RpcTargets.All)]`) for one-off events.
+- Rules: only change `[Networked]` state when `HasStateAuthority`; use `Runner.SimulationTime` for shared
+  timers (not `Time.time`); spawn with `Runner.Spawn` (not `Instantiate`) for anything others must see.
+  Most gameplay scripts (`Door`, `Key`, `Padlock`, `Bomb`, `Gun`, `Scratcher`) are **still local-only
+  MonoBehaviours** and need network versions before multiplayer play.
 
-### Avoiding merge conflicts (Unity-specific, read this!)
-- **Scene files can't really be merged by hand.** Only **one person edits `House_Bishal.unity` at a time**,
-  so announce in the group chat before you do. Build and test your feature in **your own test scene**
-  as a **prefab**, then drop the finished prefab into the main scene in one small commit.
-- Unity often changes files just from opening a scene (`ProjectSettings/*.asset`, `Settings/*RPAsset.asset`,
-  or re-saving a scene). If you didn't mean to change them, discard those changes: `git restore <file>`.
-- If a `.unity` or `.prefab` file conflicts, pick one whole side: `git checkout --theirs <file>` (theirs)
-  or `--ours` (yours), then `git add <file>`. Redo the lost changes by hand.
+## Existing gameplay pieces (`Assets/Scripts/`)
+- `Key` + `Padlock`: bring the key's Tip to the keyhole; the padlock seats the key model, turns, and toggles
+  `IsLocked`. Keys match by ID (`Key.Matches(acceptedId)`), and `Key.All` lists every key.
+- `Door` (implements `IInteractable.Interact()` to toggle): goes on the **hinge pivot**, not the mesh. It's
+  used on 12 doors in `House_Bishal`.
+- `Gun` (fires on XRI `activated`, spawns `Bullet` + muzzle flash), `Bomb` (pull the pin child to arm; the
+  fuse starts on release; respawns at the hand), `Scratcher` (knife and axe leave scratch lines and gashes),
+  `FlashEffect` (shared flash for muzzle, impact and explosion), `FlickerLight`, `CanvasController` (UI faces camera).
+
+## Editor tools (Tools → Escape Granny)
+- **Build House** / **Remove House**: generate or delete `House (generated)` (3 levels, walls with door gaps,
+  stairs, roof, door slots, markers, `EscapeTrigger`). ⚠️ **Rebuilding deletes everything inside it.** Put
+  props and scripts under separate roots (`House_Bishal` uses `Gameplay`). Change the layout in
+  `BuildPlan()` in `HouseBuilder.cs`, keeping it in sync with `floor_plan.pdf`.
+- **Apply Horror Lighting**: exponential fog, near-black ambient, weak moonlight, one dim point lamp per room
+  (some with `FlickerLight`). Shadows are off because they're too expensive on Quest.
+- **Build Main Menu** (`_Game/Editor/MainMenuSceneBuilder.cs`): regenerates `MainMenu.unity` from code,
+  including the XR rig, panels, wiring, theme (`MenuThemeApplier` + `MenuTheme.asset`) and weapon models
+  (`WeaponModelBuilder`). **Hand edits to that scene are lost on rebuild**, so change the builder or theme asset.
+
+## The house
+- **Coordinates (m):** (0, 0) is the south-west outer corner; +x east, +z north, +y up. Floors at y = −3
+  (basement), 0 (ground) and +3 (upper); roof at 6. The house is 18 × 14 m. Test spot: hallway (7.5, 0, 6.5).
+- **Markers:** `P1–P3` prisoner spawns, `G1–G3` Granny spawns, `K1–K15` key spots, `H1–H14` hiding spots.
+  Door slots (`D1_FrontDoor`, `U1_...`) mark where door prefabs go (their X scale = door width).
+- Stairs: 15 visual steps with **no colliders** plus one invisible ramp collider (avoids VR motion sickness). Keep it.
+
+## Git workflow (personal branch → sprint branch → main)
+1. Work on your branch (`divija-dev`, `bishal`, `julia-dev`, `pham_dev`, `yamilet-dev`).
+2. Sync first: `git fetch origin` then `git merge origin/sprint-<N>`.
+3. Commit small and often; `git add <files>` (check `git status`, never a blind `git add .`).
+4. `git push`, then open a **PR into `sprint-<N>`**. Sprints merge into `main` by PR. **Never push to `main`.**
+- **Scenes can't be merged by hand.** Only **one person edits `House_Bishal.unity` at a time** (announce it
+  in the group chat). Build in your own test scene as a prefab, then drop it in with one small commit.
+- Unity rewrites files just from opening things (`ProjectSettings/*.asset`, ProBuilder `Settings.json`,
+  `Settings/*RPAsset.asset`, scenes). If you didn't mean to change them: `git restore <file>`.
+- For a `.unity`/`.prefab` conflict, pick one side (`git checkout --theirs|--ours <file>`, then `git add`)
+  and redo the lost changes by hand.
 
 ## Running on a Quest
-- **Enable developer mode** on the headset (Meta Horizon phone app → Devices → Developer Mode).
-- **Quick test in the Editor:** Windows can use **Quest Link** (USB-C cable or Air Link) and just press ▶ Play.
-  **macOS has no Quest Link**, so Mac users must build to the headset or use XRI's **XR Device Simulator**
-  (keyboard and mouse fake VR) inside the Editor.
-- **Build to the headset:** plug in over USB and accept "Allow USB debugging" inside the headset.
-  Then File → Build Profiles → **Android** → Switch Platform (first time only; it's slow) →
-  make sure the right scene is in the Scene List → **Build And Run**.
-- Check setup problems under Edit → Project Settings → **XR Plug-in Management** → Project Validation,
-  and fix everything it flags.
+- Enable Developer Mode (Meta Horizon phone app → Devices → Developer Mode).
+- **Editor testing:** Windows can use Quest Link and press ▶ Play. **macOS has no Quest Link**: build to the
+  headset or use XRI's **XR Device Simulator** (Package Manager → XR Interaction Toolkit → Samples).
+- **Multiplayer testing** needs two clients in the same Fusion room (two headsets, or a headset plus the
+  Editor). Start from the **Lobby Scene**, not `House_Bishal`, or no runner or avatar is created.
+- **Build:** USB + "Allow USB debugging" → File → Build Profiles → **Android** → Switch Platform → check the
+  Scene List → **Build And Run**. Fix anything flagged under Project Settings → XR Plug-in Management →
+  Project Validation.
 
 ## Coding conventions
-- C#: `PascalCase` for classes, methods and public members; `camelCase` for private fields; one class per file,
-  and the file name must match the class name (Unity requires this for MonoBehaviours).
-- Prefer `[SerializeField] private` fields over `public` fields for Inspector values.
-- Keep gameplay numbers (cooldowns, speeds, timer, ammo) as Inspector fields, not hard-coded, so
-  designers can tune them: 30 s map cooldown, 0.75× Granny speed, 300 s round timer.
-- Write role-specific code so it can later be driven by networking. Keep "who is Granny or the prisoner"
-  in one place (e.g. a `GameManager`) instead of scattering checks.
-- Use XRI events (`selectEntered`, `selectExited`, `activated`) for interactions instead of polling
-  controller buttons in `Update()`.
-- Editor-only tools go in an `Editor/` folder (they won't be included in builds).
+- `PascalCase` classes, methods and public members; `camelCase` private fields; one class per file, with the
+  file name matching the class. Prefer `[SerializeField] private` over `public`.
+- Gameplay numbers (30 s map cooldown, 0.75× Granny speed, 300 s timer, ammo) are Inspector fields, never hard-coded.
+- Keep role logic centralized (`GameSession` now, a networked game manager later); don't scatter role checks.
+- Use XRI events (`selectEntered`, `selectExited`, `activated`) instead of polling buttons in `Update()`.
+- Short "why" comments in plain English, matching the existing scripts (the team is new to Unity and Fusion).
+- Editor-only code goes in an `Editor/` folder.
 
 ## Open decisions (ask before assuming)
-- Networking solution (Netcode for GameObjects vs Photon vs Meta Building Blocks).
-- Where the creaky floor areas are; what the "five-day system" means; how the Granny stair lift works.
-- Which build scene list is final (currently only `Scenes/SampleScene` is in Build Settings; it should
-  become the home menu scene plus `House_Bishal`).
+- How the menu, role claiming and weapon choice merge into the Fusion lobby; whether Photon Voice stays.
+- Creaky floor locations; what the "five-day system" means; how the Granny stair lift works.
 
 ## Notes for Claude / AI assistants
-- The team is new to Unity: explain Unity steps in terms of menu clicks and Inspector fields, not just code.
-- Don't hand-edit `.unity` or `.prefab` YAML unless asked; tell the user what to do in the Editor instead.
-- Never commit `Library/`, and never delete `.meta` files for assets that still exist.
-- Before a destructive git operation (reset, force-push, deleting files), confirm with the user.
+- Explain Unity steps as menu clicks and Inspector fields, not just code.
+- Don't hand-edit `.unity`/`.prefab` YAML unless asked; tell the user what to do in the Editor.
+- Never commit `Library/`; never delete `.meta` files of existing assets; confirm before destructive git ops.
+- Large script files: read `/// <summary>` headers first (most gameplay scripts document setup there).
