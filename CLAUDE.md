@@ -167,3 +167,17 @@ Personal test scenes: `Assets/_Game/Scenes/Test_<YourName>.unity`.
 - Don't hand-edit `.unity`/`.prefab` YAML unless asked; tell the user what to do in the Editor.
 - Never commit `Library/`; never delete `.meta` files of existing assets; confirm before destructive git ops.
 - Large script files: read `/// <summary>` headers first (most gameplay scripts document setup there).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `Vanderbilt-VR-2026/EscapeGranny` (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
