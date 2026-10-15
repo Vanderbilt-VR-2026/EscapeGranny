@@ -8,6 +8,7 @@
 //   button and floating just in front of it, with the button's label moved underneath. Because the
 //   copies stay linked to their prefabs, changing a weapon prefab updates the menu too.
 //   Colliders and Rigidbodies are removed from the copies so they don't fall or block the controller ray.
+//   Each model gets MenuModelIdle, so it slowly turns left and right.
 //   It replaces any old models (and removes the old picture icons, if any).
 //
 // To use a different model, change its path in Sources below. If a model sits at a bad angle,
@@ -127,6 +128,7 @@ public static class WeaponModelBuilder
         model.transform.rotation = buttonRt.rotation * pose;
         model.transform.position = buttonRt.TransformPoint(target) - buttonRt.rotation * centerOffset;
         model.transform.SetParent(buttonRt, true);
+        model.AddComponent<MenuModelIdle>(); // slow left-right turn so it reads as a real 3D object
     }
 
     // Longest side left-to-right, thinnest side toward the viewer, then ViewTilt.
