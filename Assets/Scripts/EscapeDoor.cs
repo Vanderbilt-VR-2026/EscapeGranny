@@ -10,6 +10,8 @@ public class EscapeDoor : MonoBehaviour
 {
     [SerializeField] Padlock padlock;
     [SerializeField] ChainBuilder chain;
+    [Tooltip("Optional. The extra chains across the door; they all drop when the padlock opens.")]
+    [SerializeField] ChainPattern extraChains;
 
     [Header("Swing")]
     [Tooltip("Degrees the door turns around the hinge's Y axis. Use a negative number to swing the other way.")]
@@ -65,6 +67,7 @@ public class EscapeDoor : MonoBehaviour
     IEnumerator OpenRoutine()
     {
         if (chain != null) chain.Release();
+        if (extraChains != null) extraChains.ReleaseAll();
 
         if (padlockRb != null)
         {

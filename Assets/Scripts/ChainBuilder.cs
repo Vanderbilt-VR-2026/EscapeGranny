@@ -17,6 +17,8 @@ public class ChainBuilder : MonoBehaviour
     [SerializeField] float thickness = 0.012f;
     [SerializeField] Material linkMaterial;
     [SerializeField] float linkMass = 0.15f;
+    [Tooltip("After falling, links freeze in place this many seconds later (saves performance). 0 = never.")]
+    [SerializeField] float settleAfterSeconds = 6f;
 
     readonly List<GameObject> linkObjects = new List<GameObject>();
     bool released;
@@ -29,6 +31,17 @@ public class ChainBuilder : MonoBehaviour
     public bool IsReleased => released;
 
     void Start() => Build();
+
+    /// <summary>Set up a chain from code (used by ChainPattern). Call right after AddComponent.</summary>
+    public void Setup(Transform startPoint, Transform endPoint, int linkCount, float sagAmount, float linkThickness, Material material)
+    {
+        start = startPoint;
+        end = endPoint;
+        links = Mathf.Max(2, linkCount);
+        sag = sagAmount;
+        thickness = linkThickness;
+        linkMaterial = material;
+    }
 
     [ContextMenu("Rebuild")]
     public void Build()
@@ -144,5 +157,18 @@ public class ChainBuilder : MonoBehaviour
         for (int i = 0; i < cols.Count; i++)
             for (int j = i + 1; j < cols.Count; j++)
                 Physics.IgnoreCollision(cols[i], cols[j]);
+
+        if (settleAfterSeconds > 0f) StartCoroutine(Settle());
+    }
+
+    System.Collections.IEnumerator Settle()
+    {
+        yield return new WaitForSeconds(settleAfterSeconds);
+        foreach (var l in linkObjects)
+        {
+            if (l == null) continue;
+            var rb = l.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;     // stays where it landed, costs nothing
+        }
     }
 }
