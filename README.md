@@ -1,10 +1,74 @@
-# Escape the Granny - Sprint 1
+# Escape the Granny - Sprint 2
 
 Escape the Granny is a two-player VR horror game for Meta Quest, inspired by *Granny* on Roblox. One player is Granny, who hunts. The other is the Prisoner, who has five minutes to find a key hidden somewhere in a dark house and unlock the front door before Granny catches them.
 
 The project is built with **Unity 6.3 LTS (6000.3.23f1)**, URP and the **XR Interaction Toolkit 3.3.2** on OpenXR, and targets **Meta Quest 3 / Android**.
 
 Find all presentation, all videos, and documentation here: https://drive.google.com/drive/folders/1F62pOISPDyBI4wjSDYxj0LnaDuqd0bOx?usp=drive_link 
+
+## AI Usage
+
+### Julia:
+
+1. I used it as my personal assistant.
+2. I used Claude..
+3. I started importing assets from the Unity store, and then used Claude to help me figure out why the textures weren't loading. I tried to merge, but there was a conflict, which I then asked Claude to explain. However, I did not have AI begin any work in Unity for me..
+4. Is this edit supposed to be in the gitignore file, and which lines should I keep in this merge?.
+5. Haven't gotten there yet..
+
+### Pham:
+
+1. Did I use the AI as a personal assistant or as a team member?
+ I used it as a personal assistant. I decided what we were building: the escape room, the layout, which door and which assets to use. Claude answered my questions, wrote scripts, and helped me debug when something broke. In a few places it felt more like a teammate, such as figuring out why the headset froze on the Unity logo, where we went back and forth until we found the cause. I didn't share the AI with my teammates.
+
+2. Roughly how many and which AI systems did I use?
+ I started with the built in Copilot inside VS Code/GitHub but it was very inefficient and didn't clearly explain why it was making some decisions. So I switched to Claude which worked a lot better.
+
+3. When did I start something in Unity and have the AI assist or finish it, versus giving a prompt and having the AI do the work?
+ The AI never worked inside Unity itself; I did all the work in the editor.
+
+I started in Unity, and the AI assisted: I imported the environment pack, built the foundation and room, picked and placed the door, and set up the VR rig. When something went wrong I uploaded my scene file or error text, and Claude helped me work out what to fix. For example, it compared my saved scenes and found that I had accidentally deleted the camera, which was why the app froze on the Unity logo.
+I gave a prompt, and the AI wrote it: the scripts. I described what I wanted, such as the chain falling and the door opening, the padlock hanging from the chain, or extra chains across the door, and Claude wrote the code. I then added it to my project and hooked it up in Unity.
+
+
+4. A few examples of prompts I gave
+
+"there are some bushes in front of my room, how do i delete them"
+"im frozen on the unity logo screen when i build and run"
+"how do i make it so that no matter where i am real life i appear inside the room?"
+
+
+5. How I connected the AI with Unity
+ I didn't connect it directly. There's no MCP, no IDE plugin, and no command-line link between the AI and Unity. I worked manually:
+
+I uploaded my scene files, error messages, logs, and screenshots to Claude.
+Claude sent back script files, and I dragged them into my Assets/Scripts folder in Unity.
+For setup steps, Claude gave me instructions that I followed in the Inspector.
+I used Terminal for Git and GitHub, and Claude explained the commands.
+I used Visual Studio Code as my script editor, but it wasn't connected to the AI. I liked this process because I still understood each step going through and implementing it myself. (edited)
+
+### Bishal:
+
+1. Used it as my personal assistant..
+2. I used Claude (chat app). I also installed Claude Code in VS Code but haven't used it for project work yet..
+3. Instead of building the greybox by hand, Claude wrote an editor script (HouseBuilder.cs) that builds the whole house from the floor plan numbers. The AI never worked inside Unity directly; I ran everything..
+4. My prompts:.
+    After I clicked Build and Run, nothing happens in VR.
+    Can we build the house with a script in Unity instead of building from scratch?
+5. Not used these yet.
+   
+### Divija (add here):
+
+### Yamilet:
+
+1. I used it as my personal assistant. I gave it prompts and it helped me understand issues I was running into and how to implement my ideas...
+2. I used Claude..
+3. Instead of starting in Unity, I started in Blender and used the agent to determine how to make the model compatible for Unity, and how to edit Unity Asset Store assets in Blender to be able to later configure physics in Unity..
+4. Example of prompts I gave the agent:.
+◦ How do I transfer my blender files into Unity?.
+◦ Is it possible to edit Unity Asset Store assets in Blender?.
+◦ How do I bake lighting without generating the bake?.
+5. I did not necessarily connect AI with Unity. Instead, I asked the agent how to ensure the work I was doing would be compatible with the assets and code already pushed to Github..
 
 ## Getting Started
 
