@@ -17,6 +17,12 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Success_Test.unity
     guid: 7d774ea6f6ae34bd99d1c13a8b523072
+  - enabled: 1
+    path: Assets/Scenes/Lobby Scene.unity
+    guid: fcab7254740724375b2b33bfddc54344
+  - enabled: 1
+    path: Assets/House_Bishal.unity
+    guid: d6cdfadbcb15b7045a51e7e0c105a5f2
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 27bcf39604c1c8342adeda9335296eb5, type: 2}
