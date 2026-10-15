@@ -10,6 +10,9 @@
 //   Prisoner portrait Button OnClick -> RoleSelector.SelectPrisoner
 //   START Button OnClick             -> RoleSelector.OnStartPressed
 // The highlight objects are shown/hidden to mark the picked portrait (e.g. a coloured frame).
+// The taken labels (optional, e.g. a "TAKEN" stamp) are shown on a role the other player claimed.
+// The previews (optional) are shown one at a time: the picked role's (e.g. its 3D character turning on
+// a stand), or the empty one while nothing is picked.
 // Role Claim Service: drag in the object with LocalRoleClaimService (or a networked one later).
 // If it's left empty, no role is ever taken.
 
@@ -24,6 +27,11 @@ public class RoleSelector : MonoBehaviour
     [SerializeField] private Button startButton;
     [SerializeField] private GameObject grannyHighlight;
     [SerializeField] private GameObject prisonerHighlight;
+    [SerializeField] private GameObject grannyTakenLabel;
+    [SerializeField] private GameObject prisonerTakenLabel;
+    [SerializeField] private GameObject grannyPreview;
+    [SerializeField] private GameObject prisonerPreview;
+    [SerializeField] private GameObject emptyPreview;
 
     [Tooltip("Any component that implements IRoleClaimService, e.g. LocalRoleClaimService.")]
     [SerializeField] private MonoBehaviour roleClaimService;
@@ -97,6 +105,11 @@ public class RoleSelector : MonoBehaviour
 
         if (grannyHighlight != null) grannyHighlight.SetActive(pendingRole == PlayerRole.Granny);
         if (prisonerHighlight != null) prisonerHighlight.SetActive(pendingRole == PlayerRole.Prisoner);
+        if (grannyTakenLabel != null) grannyTakenLabel.SetActive(IsTaken(PlayerRole.Granny));
+        if (prisonerTakenLabel != null) prisonerTakenLabel.SetActive(IsTaken(PlayerRole.Prisoner));
+        if (grannyPreview != null) grannyPreview.SetActive(pendingRole == PlayerRole.Granny);
+        if (prisonerPreview != null) prisonerPreview.SetActive(pendingRole == PlayerRole.Prisoner);
+        if (emptyPreview != null) emptyPreview.SetActive(pendingRole == PlayerRole.None);
         if (startButton != null) startButton.interactable = pendingRole != PlayerRole.None;
     }
 

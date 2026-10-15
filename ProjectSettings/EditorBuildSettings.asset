@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Lobby Scene.unity
     guid: fcab7254740724375b2b33bfddc54344
+  - enabled: 0
+    path: Assets/_Game/Scenes/MainMenu.unity
+    guid: ec32c4ad529a94c06bb5fc7ea485fd5c
   - enabled: 1
     path: Assets/House_Bishal.unity
     guid: d6cdfadbcb15b7045a51e7e0c105a5f2

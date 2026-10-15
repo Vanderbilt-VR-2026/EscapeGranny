@@ -25,6 +25,8 @@ public class FusionNetworkManager : MonoBehaviour
     [Min(0.1f)] public float LobbyCanvasDistance = 1f;
     [UnityEngine.Serialization.FormerlySerializedAs("LobbyCanvasHeight")]
     [Min(0f)] public float LobbyCanvasHeightAboveGround = 1f;
+    // Place the panel anyway after this long, so it never stays hidden (e.g. Editor with no headset).
+    [Min(0f)] public float LobbyCanvasMaxWait = 3f;
     public string Status { get; private set; } = "Connecting...";
     private NetworkRunner runner;
     private Recorder recorder;
@@ -32,6 +34,8 @@ public class FusionNetworkManager : MonoBehaviour
     private bool microphoneAllowed;
     private bool reconnecting;
     private bool lobbyCanvasPlaced;
+    private int lobbyCanvasTrackedFrames;
+    private float lobbyCanvasWaited;
     private int lobbySceneIndex;
 
     // Unity calls Awake before Start: prepare the local connection, UI, and voice components.
@@ -39,6 +43,8 @@ public class FusionNetworkManager : MonoBehaviour
     {
         if (PlayerCountText) PlayerCountText.text = $"0 / {MaxPlayers}";
         if (CountdownText) CountdownText.text = "Waiting...";
+        // Hidden until LateUpdate places it in front of the headset, so the player never sees it jump.
+        if (LobbyCanvas) LobbyCanvas.gameObject.SetActive(false);
         if (Instance && Instance != this)
         {
             // Returning to Lobby creates fresh UI. Keep the running manager,
@@ -50,7 +56,10 @@ public class FusionNetworkManager : MonoBehaviour
             Instance.LobbyCamera = LobbyCamera;
             Instance.LobbyCanvasDistance = LobbyCanvasDistance;
             Instance.LobbyCanvasHeightAboveGround = LobbyCanvasHeightAboveGround;
+            Instance.LobbyCanvasMaxWait = LobbyCanvasMaxWait;
             Instance.lobbyCanvasPlaced = false; // Place the newly loaded lobby panel once.
+            Instance.lobbyCanvasTrackedFrames = 0;
+            Instance.lobbyCanvasWaited = 0f;
             Instance.SetStatus(Instance.Status);
             gameObject.SetActive(false);
             Destroy(gameObject);
@@ -146,6 +155,11 @@ public class FusionNetworkManager : MonoBehaviour
         recorder.RecordingEnabled = !reconnecting && microphoneAllowed && runner.IsRunning && voice.Client.InRoom;
         // Game has no lobby panel. Unity object checks also detect references destroyed by a scene change.
         if (!LobbyCanvas || !LobbyCamera || lobbyCanvasPlaced) return;
+        // The first frames still use the camera's default pose, so wait until the headset has reported
+        // valid position and rotation for a few frames in a row (or give up waiting after LobbyCanvasMaxWait).
+        lobbyCanvasTrackedFrames = HeadsetMenuPlacer.IsHeadsetTracked() ? lobbyCanvasTrackedFrames + 1 : 0;
+        lobbyCanvasWaited += Time.unscaledDeltaTime;
+        if (lobbyCanvasTrackedFrames < 3 && lobbyCanvasWaited < LobbyCanvasMaxWait) return;
         // Use only the headset's left/right heading; looking up or down must not move the panel vertically.
         // Place it once, then let CanvasController turn it toward the camera without moving it.
         var cameraTransform = LobbyCamera.transform;
@@ -153,6 +167,7 @@ public class FusionNetworkManager : MonoBehaviour
         var position = cameraTransform.position + heading * Vector3.forward * LobbyCanvasDistance;
         position.y = LobbyCanvasHeightAboveGround; // Height above this scene's floor at world y = 0.
         LobbyCanvas.SetPositionAndRotation(position, heading);
+        LobbyCanvas.gameObject.SetActive(true);
         lobbyCanvasPlaced = true;
     }
 
