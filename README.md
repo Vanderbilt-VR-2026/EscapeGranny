@@ -1,4 +1,4 @@
-# Escape the Granny - Sprint 1
+# Escape the Granny - Sprint 2
 
 Escape the Granny is a two-player VR horror game for Meta Quest, inspired by *Granny* on Roblox. One player is Granny, who hunts. The other is the Prisoner, who has five minutes to find a key hidden somewhere in a dark house and unlock the front door before Granny catches them.
 
@@ -6,27 +6,18 @@ The project is built with **Unity 6.3 LTS (6000.3.23f1)**, URP and the **XR Inte
 
 Find all presentation, all videos, and documentation here: https://drive.google.com/drive/folders/1F62pOISPDyBI4wjSDYxj0LnaDuqd0bOx?usp=drive_link 
 
+
 ## Getting Started
 
 Install Unity 6000.3.23f1 through Unity Hub with **Android Build Support**, then clone the repo and open the project folder.
 
-The game has two main scenes:
+The build starts at `Assets/Scenes/Lobby Scene.unity`, which connects both players, then loads `Assets/House_Bishal.unity`. The opening screens (`Assets/_Game/Scenes/MainMenu.unity`) aren't connected to the lobby yet.
 
-- `Assets/_Game/Scenes/MainMenu.unity` is the opening screens. This is the first scene in the build.
-- `Assets/House_Bishal.unity` is the greyboxed house where the game takes place. The menu loads it after both players are ready.
+**Tools > Escape Granny** has **Build Main Menu** and **Build House**, which generate those scenes from code.
 
-The interactables are set up in their own test scene, `Assets/Scenes/InteractablesSprintOne.unity`.
+For multiplayer testing, run two headsets (or a headset and the Editor) from the Lobby on a network Photon can reach. Vanderbilt's guest Wi-Fi blocks it, so use a hotspot. On a Mac, use the XR Device Simulator or install the APK with Meta Quest Developer Hub.
 
-Two editor tools under **Tools > Escape Granny** generate the scenes, so the layout doesn't have to be built by hand:
-
-- **Build Main Menu** creates `MainMenu.unity` with the XR rig, all four menu screens, the button wiring, the theme and the weapon models. Rebuilding replaces the scene, so make lasting changes in the builder code or in `Assets/_Game/Settings/MenuTheme.asset` instead of in the scene.
-- **Build House** creates the house as `House (generated)` in the open scene, using the measurements from `floor_plan.pdf`. Running it again replaces the old house, and **Remove House** deletes it. Hide the **Roof** object to see inside, and move the XR Origin to `(7.5, 0, 6.5)` to start in the ground floor hallway.
-
-Quest Link isn't available on macOS, so Mac users can test in the editor with the XR Device Simulator (Window > Package Manager > XR Interaction Toolkit > Samples > XR Device Simulator) or build to the headset.
-
-For headset testing, connect a Quest with Developer Mode and USB debugging enabled, switch the build platform to Android under File > Build Profiles, and use **Build and Run**.
-
-See [CLAUDE.md](CLAUDE.md) for the full project guide, coding conventions and Git workflow.
+See [CLAUDE.md](CLAUDE.md) for the full project guide.
 
 ## VR Controls and Interaction
 
@@ -34,86 +25,58 @@ Players point at menu buttons with the controller rays and press the trigger to 
 
 ## Opening Screens
 
-Both headsets start on the same home screen. The flow is:
-
 `Home > Choose Role > Granny Weapon Select or Prisoner Briefing > House`
 
-- **Home** shows the title and a PLAY button.
-- **Choose Role** shows Granny and Prisoner portraits. The player picks one and presses START. A role that the other player has already claimed is greyed out, so the two players always end up on opposite sides. For now, the other player is simulated with Inspector checkboxes on the `RoleClaimService` object; it will be replaced once networking is set up.
-- **Granny Weapon Select** shows the axe, knife, gun and bomb as 3D models with a short description of each. The choice locks once Granny presses CONFIRM.
-- **Prisoner Briefing** explains the goal, the five-minute timer and how to stay quiet, then the player presses READY.
-
-The chosen role and weapon are stored in a `GameSession` object that carries over into the house scene. The screens follow the team moodboard: the Big Shoulders font and a blood red, dark brown, charcoal, navy and mustard palette.
+The menu opens in a random room of the house and appears in front of the player. Role select shows the chosen character turning on a stand, and the screens have animations and sound.
 
 ## House and Interactables
 
-The house is greyboxed from the team floor plan. It has three levels (basement, ground floor and upper floor), stairs, door openings, and markers for the Prisoner spawns, Granny spawns, key locations and hiding spots. Furniture has been placed in several rooms, and the remaining rooms will be finished in Sprint 2.
+- **The house:** textured, with horror lighting and flickering lights.
+- **Furniture and interactables:** doors, a locker, cabinets and a chest you can open, plus the key, padlock and weapons.
+- **Granny:** a 3D avatar.
 
-The interactables are the key, padlock, knife, pistol, bomb and axe. Each one can be grabbed with the controllers using XR Interaction Toolkit.
+## Networking
 
-## Sprint 1 Progress
+Two players join the same room with Photon Fusion 2. The lobby counts down, then loads the house for both.
 
-During Sprint 1 the team set up the project, agreed on the game rules and art direction, and built the first version of the house, the interactables and the opening screens.
+## Sprint 2 Progress
 
 Completed backlog items:
 
-- #3 Unity empty scene
-- #4 Team roles in the README
-- #9 Moodboard
-- #10 Game rules and mechanics
-- #11 CLAUDE.md project guide for AI coding tools
-- #17 Floor plan design
-- #13 Greyboxed house map
-- #5 Greyboxed furniture
-- #34 House greybox
-- #7 Interactables
-- #12 Opening screens
-- #20 Game rules slide for the presentation
-- #21 Unity screenshots
-- #22 Sprint 1 presentation
-- #23 Sprint 1 video
+- **Networking:** Photon Fusion setup, avatar spawn and ownership, head and hand sync, and scene sync (#18, #65, #66, #67, #68)
+- **House:** textures and materials, dark horror lighting with lamps in each room (#47, #43, #61, #87)
+- **Interactables:** doors that open; a locker, cabinets and a chest (#48, #40)
+- **Avatars:** Granny avatar (#36)
+- **Opening screens:** a room setting, a 3D role select screen, sound and lighting effects, and the menu placed in front of the player (#89, #90, #100, #104)
+- **Docs:** AI usage in the README (#84, #91)
 
-Carried over into Sprint 2:
+## Sprint 2 Videos
 
-- #18 Setting up the networking package
-- #16 Furniture greyboxing for the remaining rooms
+### Opening Screens
 
-## Sprint 1 Videos
+[![Opening screens video](https://drive.google.com/thumbnail?id=1rGrUn9ug_bAE0DF3PVv4Oj6K_y5f43z9&sz=w800)](https://drive.google.com/file/d/1rGrUn9ug_bAE0DF3PVv4Oj6K_y5f43z9/view?usp=drive_link)
 
-### Greybox House
+### Interactable Doors + Furniture
 
-A walkthrough of the greyboxed house and furniture.
+[![Interactable doors and furniture video](https://drive.google.com/thumbnail?id=1lI_uKqbw_icr41ZgJfXpmY30iGwZPjV8&sz=w800)](https://drive.google.com/file/d/1lI_uKqbw_icr41ZgJfXpmY30iGwZPjV8/view?usp=drive_link)
 
-[![Greybox house video](https://drive.google.com/thumbnail?id=1vc2AHEuOnZKTBDxM_Eu0IFFg37xEO8kO&sz=w800)](https://drive.google.com/file/d/1vc2AHEuOnZKTBDxM_Eu0IFFg37xEO8kO/view?usp=drive_link)
+### Textures
 
-### Interactables
+[![Textures video](https://drive.google.com/thumbnail?id=1PVr5JyYRTwck39ozpls5Txtp8xmzbIPB&sz=w800)](https://drive.google.com/file/d/1PVr5JyYRTwck39ozpls5Txtp8xmzbIPB/view?usp=drive_link)
 
-Grabbing the key, padlock, knife, pistol, bomb and axe.
+### Networking
 
-[![Interactables video](https://drive.google.com/thumbnail?id=1HBHId2_XSmQ3_IFp_nZ-LQ2k-Sd1evAQ&sz=w800)](https://drive.google.com/file/d/1HBHId2_XSmQ3_IFp_nZ-LQ2k-Sd1evAQ/view?usp=drive_link)
-
-### Granny Opening Screen
-
-Choosing the Granny role and picking a weapon.
-
-[![Granny opening screen video](https://drive.google.com/thumbnail?id=10bGwrxnD9Pb3BjoyrA_Xd9RZZevLEWg7&sz=w800)](https://drive.google.com/file/d/10bGwrxnD9Pb3BjoyrA_Xd9RZZevLEWg7/view?usp=drive_link)
-
-### Prisoner Opening Screen
-
-Choosing the Prisoner role and reading the briefing.
-
-[![Prisoner opening screen video](https://drive.google.com/thumbnail?id=1Jo0n6wcj2QOHHUwJAog0McpLKyQTpSke&sz=w800)](https://drive.google.com/file/d/1Jo0n6wcj2QOHHUwJAog0McpLKyQTpSke/view?usp=drive_link)
+[![Networking video](https://drive.google.com/thumbnail?id=1QogUwkwfvCt8CpEnhmJ5yaR6vNqyB95J&sz=w800)](https://drive.google.com/file/d/1QogUwkwfvCt8CpEnhmJ5yaR6vNqyB95J/view?usp=drive_link)
 
 ## Next Steps
 
-Sprint 2 will focus on connecting two headsets and turning the house into a playable round. Planned work from the backlog:
+We created a basic Prisoner avatar this sprint; it will be fully developed and added to the game in Sprint 3. Other main goals for Sprint 3:
 
-- Networking, so two Quests can join the same game (#18)
-- Furniture in every room, plus the key spots and hiding spots (#39, #44)
-- Doors that can be opened (#48) and physics on the interactables and furniture (#40, #41, #35)
-- Granny and Prisoner avatars and animations (#36, #37, #38, #49)
-- Textures and materials for the furniture and assets (#47), and a horror atmosphere for the house (#43)
-- The five-minute timer, random spawns and key placement, Granny's map, and the win and lose conditions
+- Connect the opening screens to the lobby, with roles claimed over the network
+- The full round: five-minute timer, random spawns and key placement, Granny's map, hiding spots and creaky floors
+- Win and lose conditions and their screens, including the locked front door
+- Finish the furniture in every room, then add sound effects, music and animations
+- Fix dizzying movement and VR bugs
 
 ## Game Rules
 
@@ -134,6 +97,23 @@ Sprint 2 will focus on connecting two headsets and turning the house into a play
 | Isabelle Pham | CS | UI / UX Design<br>Storyboarding<br>Moodboard / Palette | Design Director |
 | Yamilet Pineda | CS | 3D-Modeling, Rendering, Programming | Design Director<br>Asset Manager |
 
-## Sprint 1 - Meta Quest Build apk File
+## AI Usage
 
-https://drive.google.com/file/d/1-J9EVaAf9kg6m4jvDG61llZsUFw22n6w/view?usp=drive_link
+1. **Personal assistant or team member?** Everyone used AI as a personal assistant for their own tasks (the house, lighting, networking, assets, interactables and the opening screens). We decided what to build; the AI answered questions, wrote scripts and helped us debug. No one shared one AI as a team member.
+
+2. **Which AI systems?** Mostly Claude, in three forms: the Claude Desktop, Claude Code (terminal & VSCode Extension), and Claude Design. One member tried GitHub Copilot in VS Code first but switched to Claude because it explained its decisions more clearly.
+
+3. **AI assisting vs AI starting the work:** Most of the time we started the work ourselves (importing assets, building rooms, setting up the XR rig, importing the Photon template, modelling in Blender) and used AI to debug or finish it. Examples: textures that wouldn't load, merge conflicts, and the app freezing on the Unity logo because the camera had been deleted. The AI started the work from a prompt mainly for scripts: the house builder that generates the whole greybox from the floor plan, the door, chain and padlock behaviour, the horror lighting, and the redesigned main menu (new layout, 3D role select screen, animations, sound, and the menu placed in front of the player). We then ran the tools and tested in Unity and on the Quest.
+
+4. **Example prompts:**
+   - "How do I add 2-player networking with Photon Fusion?"
+   - "Can we build the house with a script in Unity instead of building from scratch?"
+   - "I'm frozen on the Unity logo screen when I build and run."
+   - "How do I transfer my Blender files into Unity?"
+   - "Explain the merge conflict."
+
+5. **How AI connects to Unity:** No one used MCP. Most of the team worked through the Claude chat app: they uploaded scene files, errors, logs and screenshots, then dragged the scripts Claude wrote into the project and followed its steps in the Inspector. Claude Code (in the terminal and the VS Code extension) edits scripts directly in the project folder. We then run the tools and test in Unity.
+
+## Sprint 2 - Meta Quest Build apk File
+https://drive.google.com/file/d/1NU0BPlyIS44M5-Xs3_rXw_uGw9a5JH_K/view?usp=drive_link
+

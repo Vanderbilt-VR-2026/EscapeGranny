@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "com.photonengine.voice-fusion": "https://github.com/Photon-Server/Photon-UPM.git#fusion/v2/voice-for-fusion",
+    "com.unity.nuget.mono-cecil": "1.10.2",
     "com.meta.xr.sdk.core": "205.0.0",
     "com.meta.xr.sdk.interaction.ovr": "205.0.0",
     "com.unity.ai.navigation": "2.0.14",

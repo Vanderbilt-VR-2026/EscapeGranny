@@ -1,7 +1,8 @@
 // MenuThemeApplier.cs
 //
 // Restyles the open main menu scene with the moodboard look from MenuTheme: Big Shoulders fonts,
-// the five moodboard colours, a dark foggy room instead of the blue default sky.
+// the five moodboard colours, a see-through dark panel, and no blue default sky. (The room's own
+// lighting comes from HouseBuilder's horror lighting, which this leaves alone.)
 //
 // How to use:
 //   Runs automatically as part of Tools > Escape Granny > Build Main Menu (MainMenuSceneBuilder).
@@ -22,7 +23,6 @@ public static class MenuThemeApplier
     const string ThemePath = "Assets/_Game/Settings/MenuTheme.asset";
     const string DisplayFontPath = "Assets/_Game/Fonts/BigShoulders-Black.ttf";
     const string BodyFontPath = "Assets/_Game/Fonts/BigShoulders-SemiBold.ttf";
-    const string FloorMaterialPath = "Assets/_Game/Materials/MenuFloor.mat";
 
     // Styles everything under the menu canvas plus the room around it. Returns false (and changes
     // nothing) if the theme is missing a font. The caller saves the scene.
@@ -37,10 +37,7 @@ public static class MenuThemeApplier
         }
 
         foreach (var image in canvas.GetComponentsInChildren<Image>(true))
-        {
-            if (image.name == "Background") SetColor(image, WithAlpha(theme.charcoal, 0.94f));
-            else if (image.name == "Highlight") SetColor(image, theme.mustard);
-        }
+            StyleImage(image, theme);
         foreach (var button in canvas.GetComponentsInChildren<Button>(true))
             StyleButton(button, theme);
         foreach (var text in canvas.GetComponentsInChildren<Text>(true))
@@ -50,11 +47,31 @@ public static class MenuThemeApplier
         return true;
     }
 
+    // Decorative images, by the names MainMenuSceneBuilder gives them.
+    static void StyleImage(Image image, MenuTheme theme)
+    {
+        switch (image.name)
+        {
+            case "Background": SetColor(image, WithAlpha(theme.voidBlack, theme.panelOpacity)); break; // the room shows through
+            case "Highlight": SetColor(image, theme.mustard); break;    // frame around the picked card
+            case "Glow": SetColor(image, WithAlpha(theme.bloodRed, 0.3f)); break;
+            case "Corner": SetColor(image, WithAlpha(theme.ash, 0.45f)); break;
+            case "Divider": SetColor(image, theme.bloodRed); break;
+            case "BriefCard": SetColor(image, theme.charcoal); break;
+            case "StageGlow": // the role's colour glowing behind its 3D character
+                SetColor(image, WithAlpha(RoleColor(image.transform, theme), 0.5f));
+                break;
+            case "Accent": // colour stripe on a card: the role's colour, red otherwise
+                SetColor(image, RoleColor(image.transform, theme));
+                break;
+        }
+    }
+
     static void StyleButton(Button button, MenuTheme theme)
     {
         Color color;
-        if (button.name == "GrannyPortrait") color = theme.bloodRed;
-        else if (button.name == "PrisonerPortrait") color = theme.navy;
+        if (button.name.EndsWith("Portrait")) color = theme.charcoal; // role cards: dark, coloured by stripe + name
+        else if (button.name == "BackButton") color = theme.charcoal;
         else if (IsWeaponOption(button.transform)) color = theme.darkBrown;
         else color = theme.bloodRed; // PLAY, START, CONFIRM, READY
 
@@ -104,12 +121,70 @@ public static class MenuThemeApplier
                 text.color = theme.ash;
                 break;
 
-            case "Label" when button != null:
-                bool isOption = button.name.EndsWith("Portrait") || IsWeaponOption(button.transform);
+            case "Label" when button != null && button.name == "BackButton":
                 text.font = theme.displayFont;
-                text.fontSize = isOption ? theme.optionLabelSize : theme.actionLabelSize;
+                text.fontSize = theme.backLabelSize;
+                text.color = theme.ash;
+                break;
+
+            case "Label" when button != null && button.name.EndsWith("Portrait"):
+                text.font = theme.displayFont;
+                text.fontSize = theme.roleNameSize;
+                text.color = RoleColor(text.transform, theme);
+                SetShadow(text.gameObject, WithAlpha(Color.black, 0.6f), new Vector2(2, -2));
+                break;
+
+            case "RoleName": // big name beside the turning character
+                text.font = theme.displayFont;
+                text.fontSize = theme.roleNameSize;
+                text.color = RoleColor(text.transform, theme);
+                SetShadow(text.gameObject, WithAlpha(Color.black, 0.6f), new Vector2(2, -2));
+                break;
+
+            case "PickHint":
+                text.font = theme.displayFont;
+                text.fontSize = theme.headingSize;
+                text.color = WithAlpha(theme.ash, 0.6f);
+                break;
+
+            case "Label" when button != null:
+                text.font = theme.displayFont;
+                text.fontSize = IsWeaponOption(button.transform) ? theme.optionLabelSize : theme.actionLabelSize;
                 text.color = theme.bone;
                 SetShadow(text.gameObject, WithAlpha(Color.black, 0.6f), new Vector2(2, -2));
+                break;
+
+            case "Step":
+            case "Tag":
+                text.font = theme.displayFont;
+                text.fontSize = theme.smallSize;
+                text.color = theme.mustard;
+                break;
+
+            case "Subtitle":
+            case "Subtext":
+                text.font = theme.bodyFont;
+                text.fontSize = theme.smallSize;
+                text.color = theme.ash;
+                break;
+
+            case "Hint":
+                text.font = theme.bodyFont;
+                text.fontSize = theme.smallSize;
+                text.color = WithAlpha(theme.ash, 0.7f);
+                break;
+
+            case "Stats":
+                text.font = theme.bodyFont;
+                text.fontSize = theme.smallSize;
+                text.color = theme.bone;
+                break;
+
+            case "TakenLabel": // rubber stamp over a role the other player claimed
+                text.font = theme.displayFont;
+                text.fontSize = theme.roleNameSize;
+                text.color = theme.bone;
+                SetShadow(text.gameObject, WithAlpha(Color.black, 0.8f), new Vector2(3, -3));
                 break;
 
             case "Description":
@@ -126,7 +201,8 @@ public static class MenuThemeApplier
         }
     }
 
-    // Dark, foggy menu room: no blue sky, dim warm light, dark wooden floor.
+    // Dark sky outside the windows and doorways: no blue default skybox. Fog, ambient light and the
+    // moonlight come from HouseBuilder's horror lighting (applied before this), so they're left alone.
     static void StyleEnvironment(MenuTheme theme)
     {
         var sceneCamera = Object.FindAnyObjectByType<Camera>();
@@ -134,32 +210,19 @@ public static class MenuThemeApplier
         {
             Undo.RecordObject(sceneCamera, "Style camera");
             sceneCamera.clearFlags = CameraClearFlags.SolidColor;
-            sceneCamera.backgroundColor = theme.charcoal * 0.5f;
+            sceneCamera.backgroundColor = RenderSettings.fog ? RenderSettings.fogColor : theme.voidBlack; // matches the fog
         }
 
-        // RenderSettings can't be undone with Cmd/Ctrl+Z; rerun with other theme values instead.
+        // RenderSettings can't be undone with Cmd/Ctrl+Z; rebuild the menu instead.
         RenderSettings.skybox = null;
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.14f, 0.12f, 0.11f);
-        RenderSettings.fog = true;
-        RenderSettings.fogMode = FogMode.Exponential;
-        RenderSettings.fogDensity = 0.12f;
-        RenderSettings.fogColor = theme.charcoal * 0.5f;
+    }
 
-        var sun = GameObject.Find("Directional Light");
-        if (sun != null && sun.TryGetComponent(out Light light))
-        {
-            Undo.RecordObject(light, "Style light");
-            light.intensity = 0.4f;
-            light.color = new Color(1f, 0.82f, 0.65f);
-        }
-
-        var floor = GameObject.Find("Floor");
-        if (floor != null && floor.TryGetComponent(out Renderer floorRenderer))
-        {
-            Undo.RecordObject(floorRenderer, "Style floor");
-            floorRenderer.sharedMaterial = LoadOrCreateFloorMaterial(theme.darkBrown);
-        }
+    // Prisoner things (anything under PrisonerPortrait or PrisonerPreview) are blue, the rest Granny red.
+    static Color RoleColor(Transform t, MenuTheme theme)
+    {
+        for (; t != null; t = t.parent)
+            if (t.name.StartsWith("Prisoner")) return theme.coldBlue;
+        return theme.bloodRed;
     }
 
     static bool IsWeaponOption(Transform buttonTransform)
@@ -206,22 +269,6 @@ public static class MenuThemeApplier
         AssetDatabase.SaveAssets();
         Debug.Log("[MenuThemeApplier] Created " + ThemePath + ". Tweak it there and rerun Apply Menu Theme.");
         return theme;
-    }
-
-    static Material LoadOrCreateFloorMaterial(Color color)
-    {
-        var material = AssetDatabase.LoadAssetAtPath<Material>(FloorMaterialPath);
-        if (material == null)
-        {
-            EnsureFolder("Assets/_Game/Materials");
-            material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-            AssetDatabase.CreateAsset(material, FloorMaterialPath);
-        }
-        Undo.RecordObject(material, "Style floor material");
-        material.SetColor("_BaseColor", color);
-        material.SetFloat("_Smoothness", 0.1f);
-        EditorUtility.SetDirty(material);
-        return material;
     }
 
     static void EnsureFolder(string path)

@@ -16,8 +16,11 @@ public class MenuTheme : ScriptableObject
     [Header("Moodboard palette")]
     public Color bloodRed = Hex("A62F23");   // title, action buttons, Granny
     public Color darkBrown = Hex("31220C");  // wood: weapon buttons
-    public Color charcoal = Hex("1C2120");   // panel background, fog
-    public Color navy = Hex("0C1B31");       // Prisoner
+    public Color charcoal = Hex("1C2120");   // dark accents
+    public Color voidBlack = Hex("000000");  // camera background and menu panel
+    [Range(0f, 1f)] public float panelOpacity = 0.82f; // menu panel: see-through enough to show the room behind
+    public Color navy = Hex("0C1B31");       // Prisoner (dark)
+    public Color coldBlue = Hex("4A78B0");   // Prisoner accents: a brighter navy that shows up on black
     public Color mustard = Hex("967800");    // the key: selection frames, descriptions
 
     [Header("Neutrals")]
@@ -30,7 +33,10 @@ public class MenuTheme : ScriptableObject
     public int headingSize = 40;
     public int actionLabelSize = 52;
     public int optionLabelSize = 38;
+    public int roleNameSize = 60;  // GRANNY / PRISONER on the role cards
     public int bodySize = 28;
+    public int smallSize = 22;     // step labels, role card stats, weapon tags, controls hint
+    public int backLabelSize = 32;
 
     [Tooltip("How far the off-white copy behind the title is shifted (right, down). Smaller = layers closer together.")]
     public Vector2 titleShadowOffset = new Vector2(3, -3);
