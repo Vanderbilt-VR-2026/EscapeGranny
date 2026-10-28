@@ -420,11 +420,13 @@ public static class HouseBuilder
     [MenuItem("Tools/Escape Granny/Apply Horror Lighting")]
     public static void ApplyHorrorLighting()
     {
-        // Thick, dark fog and almost no ambient light: rooms fade into black a few meters away
+        // Thick fog and almost no ambient light: rooms fade into haze a few meters away.
+        // The fog is a dim blue-grey, not black: black fog over a dark room just looks like darkness.
+        // Density 0.18 (squared) hides about half of what is 5 m away and almost all of it at 8 m.
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogColor = new Color(0.02f, 0.02f, 0.025f);
-        RenderSettings.fogDensity = 0.07f;
+        RenderSettings.fogColor = new Color(0.08f, 0.09f, 0.11f);
+        RenderSettings.fogDensity = 0.18f;
         RenderSettings.ambientMode = AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.035f, 0.035f, 0.045f);
 
