@@ -3,8 +3,9 @@
 // Shows one menu panel at a time. Buttons call the Show...() methods from their OnClick list.
 // The new panel fades in and settles from slightly smaller, instead of popping in.
 //
-// Setup: put this on an object in the menu scene and drag the four panel GameObjects
-// (children of the menu canvas) into the fields below.
+// Setup: put this on an object in the menu scene and drag the panel GameObjects
+// (children of the menu canvas) into the fields below. Granny Tutorial Panel is optional:
+// if it's empty, confirming a weapon starts the game straight away.
 
 using System.Collections;
 using UnityEngine;
@@ -15,6 +16,8 @@ public class MenuController : MonoBehaviour
     [SerializeField] private GameObject roleSelectPanel;
     [SerializeField] private GameObject grannyLoadoutPanel;
     [SerializeField] private GameObject prisonerBriefPanel;
+    [Tooltip("Optional. Shown after Granny confirms a weapon, before the game starts.")]
+    [SerializeField] private GameObject grannyTutorialPanel;
     [SerializeField, Min(0f)] private float fadeSeconds = 0.3f;
     [Tooltip("Scene loaded after the role screens. It must be in the build's scene list.")]
     [SerializeField] private string gameSceneName = "House_Bishal";
@@ -30,8 +33,11 @@ public class MenuController : MonoBehaviour
     public void ShowRoleSelect() => ShowOnly(roleSelectPanel);
     public void ShowGrannyLoadout() => ShowOnly(grannyLoadoutPanel);
     public void ShowPrisonerBrief() => ShowOnly(prisonerBriefPanel);
+    public void ShowGrannyTutorial() => ShowOnly(grannyTutorialPanel);
 
-    // Called when the player is ready (Granny confirmed a weapon, or the prisoner pressed READY).
+    public bool HasGrannyTutorial => grannyTutorialPanel != null;
+
+    // Called when the player is ready (Granny pressed READY on her weapon tutorial, or the prisoner pressed READY).
     // For now this loads the house offline (one headset, no Photon) for testing; the networked
     // version will go through the Lobby instead.
     public void StartGame()
@@ -58,6 +64,7 @@ public class MenuController : MonoBehaviour
         SetActive(roleSelectPanel, panel == roleSelectPanel);
         SetActive(grannyLoadoutPanel, panel == grannyLoadoutPanel);
         SetActive(prisonerBriefPanel, panel == prisonerBriefPanel);
+        SetActive(grannyTutorialPanel, panel == grannyTutorialPanel);
         Debug.Log($"[MenuController] Showing {panel.name}");
 
         if (fade != null) StopCoroutine(fade);
