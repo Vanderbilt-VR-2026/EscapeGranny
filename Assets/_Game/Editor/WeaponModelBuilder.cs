@@ -34,10 +34,10 @@ public static class WeaponModelBuilder
     // Spin rolls the model around the viewer's line of sight (degrees).
     static readonly (WeaponType weapon, string path, float spin)[] Sources =
     {
-        (WeaponType.Axe, "Assets/6 Axe/Axe Realistic PBR/Built-In/Prefabs/Axe.prefab", 0f),
-        (WeaponType.Knife, "Assets/1 Knife/KitchenRustyKnife/P_KitchenRustyKnife.prefab", 0f),
-        (WeaponType.Gun, "Assets/4 Low Poly Guns/Models/Guns/pistol1/pistol1.fbx", 0f),
-        (WeaponType.Bomb, "Assets/5 Stylized Explosives/Prefabs/Bomb3.prefab", 0f),
+        (WeaponType.Axe, "Assets/00 Weapons/6 Axe/Axe Realistic PBR/Built-In/Prefabs/Axe.prefab", 0f),
+        (WeaponType.Knife, "Assets/00 Weapons/1 Knife/KitchenRustyKnife/P_KitchenRustyKnife.prefab", 0f),
+        (WeaponType.Gun, "Assets/00 Weapons/4 Low Poly Guns/Models/Guns/pistol1/pistol1.fbx", 0f),
+        (WeaponType.Bomb, "Assets/00 Weapons/5 Stylized Explosives/Prefabs/Bomb3.prefab", 0f),
     };
 
     // Turns every model slightly so it reads as 3D instead of a flat side view.
