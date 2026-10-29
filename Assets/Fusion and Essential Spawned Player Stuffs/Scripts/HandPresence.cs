@@ -42,19 +42,24 @@ public class HandPresence : MonoBehaviour
         {
             targetDevice = devices[0];
             // Use the first matching device and find a model whose prefab name equals its device name.
+            // A controller that went to sleep comes back as a "new" device, so reuse the models made
+            // the first time instead of stacking another hand on top of the old one.
             GameObject prefab = controllerPrefabs.Find(controller => controller.name == targetDevice.name);
-            if (prefab)
+            if (!spawnedController && prefab)
             {
                 spawnedController = Instantiate(prefab, transform);
             }
-            else
+            else if (!spawnedController)
             {
                 Debug.Log("Did not find corresponding controller model");
             }
 
             // The hand is created even if no matching controller model is available.
-            spawnedHandModel = Instantiate(handModelPrefab, transform);
-            handAnimator = spawnedHandModel.GetComponent<Animator>();
+            if (!spawnedHandModel)
+            {
+                spawnedHandModel = Instantiate(handModelPrefab, transform);
+                handAnimator = spawnedHandModel.GetComponent<Animator>();
+            }
         }
     }
 

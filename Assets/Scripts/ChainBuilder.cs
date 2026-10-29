@@ -133,6 +133,12 @@ public class ChainBuilder : MonoBehaviour
         return p;
     }
 
+    // Links from every chain that has been released (so different chains don't fight each other).
+    static readonly List<Collider> releasedLinks = new List<Collider>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => releasedLinks.Clear();
+
     [ContextMenu("Release")]
     public void Release()
     {
@@ -146,17 +152,49 @@ public class ChainBuilder : MonoBehaviour
             var col = l.GetComponent<Collider>();
             col.enabled = true;
             cols.Add(col);
-
-            var rb = l.AddComponent<Rigidbody>();
-            rb.mass = linkMass;
-            rb.AddForce(new Vector3(Random.Range(-0.3f, 0.3f), 0.1f, Random.Range(-0.3f, 0.3f)), ForceMode.Impulse);
-            rb.AddTorque(Random.insideUnitSphere * 0.2f, ForceMode.Impulse);
         }
 
         // Links overlap each other, so stop them colliding or they will explode apart.
         for (int i = 0; i < cols.Count; i++)
             for (int j = i + 1; j < cols.Count; j++)
                 Physics.IgnoreCollision(cols[i], cols[j]);
+
+        // ...and the same for links of other chains that cross this one (ChainPattern).
+        releasedLinks.RemoveAll(c => c == null);
+        foreach (var a in cols)
+            foreach (var b in releasedLinks)
+                Physics.IgnoreCollision(a, b);
+        releasedLinks.AddRange(cols);
+
+        // Don't let falling links shove the player around.
+        foreach (var cc in FindObjectsByType<CharacterController>(FindObjectsSortMode.None))
+            foreach (var a in cols)
+                Physics.IgnoreCollision(a, cc);
+
+        // Anything a link is already touching when it drops (the padlock, the door, a wall, the door frame)
+        // would otherwise get violently pushed apart from it, so ignore those too.
+        var overlaps = new Collider[16];
+        foreach (var a in cols)
+        {
+            int n = Physics.OverlapBoxNonAlloc(a.bounds.center, a.bounds.extents, overlaps, Quaternion.identity,
+                                               ~0, QueryTriggerInteraction.Ignore);
+            for (int k = 0; k < n; k++)
+                if (overlaps[k] != null && overlaps[k] != a && !cols.Contains(overlaps[k]))
+                    Physics.IgnoreCollision(a, overlaps[k]);
+        }
+
+        foreach (var col in cols)
+        {
+            var rb = col.gameObject.AddComponent<Rigidbody>();
+            rb.mass = linkMass;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;              // smooth movement on screen
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; // small + fast: don't pass through the floor
+            rb.maxDepenetrationVelocity = 0.5f;                                 // if anything does overlap, separate gently
+
+            // A small random nudge so the chain doesn't drop perfectly straight.
+            rb.AddForce(new Vector3(Random.Range(-0.4f, 0.4f), 0.1f, Random.Range(-0.4f, 0.4f)), ForceMode.VelocityChange);
+            rb.AddTorque(Random.insideUnitSphere * 2f, ForceMode.VelocityChange);
+        }
 
         if (settleAfterSeconds > 0f) StartCoroutine(Settle());
     }
