@@ -53,7 +53,7 @@ public class LocalPlayerRig : NetworkBehaviour
 
         if (hideState != null) hideState.SetHidden(true);
         SetLocomotion(false);
-        MoveTo(hidePoint);
+        MoveTo(hidePoint, true);
         StartCoroutine(LogAfterMove("hide"));
     }
 
@@ -61,7 +61,7 @@ public class LocalPlayerRig : NetworkBehaviour
     {
         if (rig == null) return;
 
-        MoveTo(exitPoint);
+        MoveTo(exitPoint, false);
         SetLocomotion(true);
         if (hideState != null) hideState.SetHidden(false);
         currentSpot = null;
@@ -70,7 +70,7 @@ public class LocalPlayerRig : NetworkBehaviour
 
     // Puts the player's FEET (the rig origin) on the floor under the point,
     // so the head is never placed at floor level.
-    void MoveTo(Transform target)
+    void MoveTo(Transform target, bool headAtTarget)
     {
         var origin = rig.xrOrigin;
         rig.characterController.enabled = false;
@@ -81,6 +81,15 @@ public class LocalPlayerRig : NetworkBehaviour
         origin.MatchOriginUpCameraForward(Vector3.up, flat.normalized);
 
         // Snap to the floor under the point, so a slightly wrong Y can't drop you through
+        if (headAtTarget)
+        {
+            // HIDING: put the player's HEAD at the point (HidePoint = where the head should be).
+            // The Character Controller stays disabled while hidden, so nothing can pull you through the floor.
+            origin.MoveCameraToWorldLocation(target.position);
+            return;
+        }
+
+        // EXITING: put the FEET on the floor under the point
         Vector3 floorPos = target.position;
         if (Physics.Raycast(target.position + Vector3.up * 0.5f, Vector3.down,
                             out var hit, 3f, ~0, QueryTriggerInteraction.Ignore))
@@ -94,7 +103,6 @@ public class LocalPlayerRig : NetworkBehaviour
         }
         floorPos += Vector3.up * 0.05f; // small lift so the capsule starts above the floor
 
-        // Put the feet at the floor point, keeping the head's horizontal offset
         Vector3 cam = origin.CameraInOriginSpacePos;
         Vector3 offset = origin.Origin.transform.TransformVector(new Vector3(cam.x, 0f, cam.z));
         origin.Origin.transform.position = floorPos - offset;

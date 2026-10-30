@@ -16,9 +16,13 @@ public class HidingSpot : NetworkBehaviour
     void Awake()     => interactable.selectEntered.AddListener(OnSelected);
     void OnDestroy() => interactable.selectEntered.RemoveListener(OnSelected);
 
-    void OnSelected(SelectEnterEventArgs args) 
+    void OnSelected(SelectEnterEventArgs args)
     {
-        Debug.Log($"[Hide] Selected. Spawned={Object != null && Object.IsValid}, Occupied={(Object != null && Object.IsValid ? Occupied.ToString() : "n/a")}");
+        if (Object == null || !Object.IsValid)
+        {
+            Debug.LogWarning("[Hide] Bed isn't spawned by Fusion, skipping the network request (offline test).");
+            return;
+        }
         RPC_RequestHide();
     }
 

@@ -110148,8 +110148,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2acbb4cf626c1eb48b9a14840a49c161, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  spot: {fileID: 0}
   hidePoint: {fileID: 1584822644}
+  exitPoint: {fileID: 1878162437}
 --- !u!43 &1580424255
 Mesh:
   m_ObjectHideFlags: 0
