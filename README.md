@@ -1,4 +1,4 @@
-# Escape the Granny - Sprint 2
+# Escape the Granny - Sprint 3
 
 Escape the Granny is a two-player VR horror game for Meta Quest, inspired by *Granny* on Roblox. One player is Granny, who hunts. The other is the Prisoner, who has five minutes to find a key hidden somewhere in a dark house and unlock the front door before Granny catches them.
 
@@ -11,7 +11,7 @@ Find all presentation, all videos, and documentation here: https://drive.google.
 
 Install Unity 6000.3.23f1 through Unity Hub with **Android Build Support**, then clone the repo and open the project folder.
 
-The build starts at `Assets/Scenes/Lobby Scene.unity`, which connects both players, then loads `Assets/House_Bishal.unity`. The opening screens (`Assets/_Game/Scenes/MainMenu.unity`) aren't connected to the lobby yet.
+The build starts at the opening screens (`Assets/_Game/Scenes/MainMenu.unity`), which load the house (`Assets/House_Bishal.unity`) for one player. The networked lobby (`Assets/Scenes/Lobby Scene.unity`) isn't in the build right now; it will come back once the opening screens are connected to it.
 
 **Tools > Escape Granny** has **Build Main Menu** and **Build House**, which generate those scenes from code.
 
@@ -33,50 +33,96 @@ The menu opens in a random room of the house and appears in front of the player.
 
 - **The house:** textured, with horror lighting and flickering lights.
 - **Furniture and interactables:** doors, a locker, cabinets and a chest you can open, plus the key, padlock and weapons.
-- **Granny:** a 3D avatar.
+- **Avatars:** a rigged Granny and an orange-jumpsuit Prisoner, both playing idle animations in the basement.
+- **End of the round:** time-out screens for both roles, and a success sequence where the Prisoner escapes the house.
 
 ## Networking
 
 Two players join the same room with Photon Fusion 2. The lobby counts down, then loads the house for both.
 
-## Sprint 2 Progress
+## Design
+
+### Start Screen
+
+**What the player sees:** the game opens with the player already standing inside Granny's house, in a dark room picked at random from the spawn rooms. The menu appears 2 m in front of them once the headset is tracking, facing the most open side of the room (if a wall is close, the menu moves in front of it and shrinks so it looks the same size). The title "Escape the Granny" flickers like a failing bulb with a red glow behind it, dust floats past, and a low drone with wind and a faint heartbeat plays underneath. The home screen has one line, "Two players. One key. Five minutes.", and a single PLAY button.
+
+**Why:** we wanted the first thing the player feels to be the game itself, not a flat title card. Starting in the real house shows them where they'll be trapped, and because the room changes every time, the house never feels fully known. The flicker, sound and dim light set the horror tone before anyone presses a button, and the one-line tagline explains the whole game without a wall of text.
+
+**What it tells the player:** this is a tense, dark, two-player game with a clear goal and a time limit. One person hunts and one hides, so the start screen leads straight into choosing a side.
+
+**What's next:** PLAY opens role select. Granny ("The Hunter") and the Prisoner ("The Hunted") each have a box on the left, and the picked character turns on a stand on the right with three short lines about how they play. A role the other player has claimed greys out with a "TAKEN" stamp. After START:
+
+- **Granny** picks one weapon (axe and knife are near, the gun is far with limited ammo, the bomb is thrown), then watches a short tutorial for that weapon.
+- **The Prisoner** reads a briefing with the goal, the 5:00 time limit and stealth tips.
+
+READY drops them into the house.
+
+### Interactions
+
+**Are we using the default settings?** Mostly, yes. We use the XR Interaction Toolkit's starter XR Origin: the left stick moves smoothly, the right stick turns, the grip button grabs and the trigger selects. That's the control scheme most Quest players already know, so nobody has to learn new controls in a horror game where they're already under pressure. It also let us spend our time on the house and the game instead of rebuilding the rig.
+
+What we changed:
+
+- **Turning:** smooth turning at 90° per second, faster than the default 60°, with snap turning off. Granny has to whip around fast when she hears a noise, and the Prisoner has to check behind them.
+- **Comfort:** we fixed dizzying movement this sprint (#105). The stairs have one invisible ramp instead of 15 bumpy steps, and the rig steps up small ledges (0.1 m) so the camera doesn't jolt.
+- **Holding items:** Granny's weapon starts in her right hand, but after her first squeeze it's a normal grab. Letting go drops or throws it, and she has to pick it back up.
+
+**Distance grab or direct interaction?** We use both, for different things:
+
+- **Menus use rays (distance).** The menu floats 2 m away, so the player points with a laser and pulls the trigger. Buttons grow and tick when the ray hovers them, so it's clear what you're about to press.
+- **The house uses direct interaction.** You grab a door knob and twist it, pull a drawer handle, push the key into the padlock and swing the axe. Direct interaction is the better match for this game: having to walk up to things and physically reach for them is what makes searching the house tense. Distance grab would let the Prisoner pull the key from across the room and skip the danger. The starter rig still allows far grabbing by default, so next we're turning that off in the house so every grab has to be within arm's reach.
+
+### Hands and Controllers
+
+**What they look like:** both players see their own hands instead of controller models. The fingers close when you squeeze the grip and curl when you pull the trigger. Hands make grabbing a knob or a key feel natural, and they make the player feel like a person stuck in the house rather than someone holding a remote.
+
+**Does it change through the experience?** Yes:
+
+- **In the menu:** the hands also cast a laser ray for pointing at buttons.
+- **In the house:** things are grabbed with the hand itself. Granny starts with her weapon in her right hand, and the Prisoner starts empty-handed, which fits their roles: one is armed and one has to search.
+- **Next:** each role gets its own hands (the Prisoner's matching the orange-jumpsuit avatar, Granny's older and wrinkled), and the Prisoner will carry a spotlight as their only light. The other player already sees your head and hands move; in Sprint 4 they'll see your full avatar.
+
+## Sprint 3 Progress
 
 Completed backlog items:
 
-- **Networking:** Photon Fusion setup, avatar spawn and ownership, head and hand sync, and scene sync (#18, #65, #66, #67, #68)
-- **House:** textures and materials, dark horror lighting with lamps in each room (#47, #43, #61, #87)
-- **Interactables:** doors that open; a locker, cabinets and a chest (#48, #40)
-- **Avatars:** Granny avatar (#36)
-- **Opening screens:** a room setting, a 3D role select screen, sound and lighting effects, and the menu placed in front of the player (#89, #90, #100, #104)
-- **Docs:** AI usage in the README (#84, #91)
+- **Avatars:** the Prisoner avatar (Mixamo model, URP material, breathing idle) and a rigged Granny with an idle animation (#37, #123)
+- **End of the round:** the time-runs-out failure screen, and the success screen joined to the house (#86, #128)
+- **Granny:** a tutorial for each weapon, and an improved Granny spawn (#127, #129)
+- **House:** textures and materials on the furniture, and interactable basement furniture and items for the Prisoner's success sequence (#47, #118)
+- **VR comfort:** fixed dizzying movement (#105)
 
-## Sprint 2 Videos
+## Sprint 3 Videos
 
-### Opening Screens
+### Prisoner Character
 
-[![Opening screens video](https://drive.google.com/thumbnail?id=1rGrUn9ug_bAE0DF3PVv4Oj6K_y5f43z9&sz=w800)](https://drive.google.com/file/d/1rGrUn9ug_bAE0DF3PVv4Oj6K_y5f43z9/view?usp=drive_link)
+[![Prisoner character video](https://drive.google.com/thumbnail?id=1H5j3w3-yu88Rt689mpg3N2b7PsvqBUhx&sz=w800)](https://drive.google.com/file/d/1H5j3w3-yu88Rt689mpg3N2b7PsvqBUhx/view?usp=drive_link)
 
-### Interactable Doors + Furniture
+### Granny Time Out (Lose)
 
-[![Interactable doors and furniture video](https://drive.google.com/thumbnail?id=1lI_uKqbw_icr41ZgJfXpmY30iGwZPjV8&sz=w800)](https://drive.google.com/file/d/1lI_uKqbw_icr41ZgJfXpmY30iGwZPjV8/view?usp=drive_link)
+[![Granny time out video](https://drive.google.com/thumbnail?id=1hDvRZvr4gagT1a_t-cyfgEWET_nj5cXv&sz=w800)](https://drive.google.com/file/d/1hDvRZvr4gagT1a_t-cyfgEWET_nj5cXv/view?usp=drive_link)
 
-### Textures
+### Prisoner Time Out
 
-[![Textures video](https://drive.google.com/thumbnail?id=1PVr5JyYRTwck39ozpls5Txtp8xmzbIPB&sz=w800)](https://drive.google.com/file/d/1PVr5JyYRTwck39ozpls5Txtp8xmzbIPB/view?usp=drive_link)
+[![Prisoner time out video](https://drive.google.com/thumbnail?id=13c3VZdtfxN0avPtd62PUmy93e4neqIpl&sz=w800)](https://drive.google.com/file/d/13c3VZdtfxN0avPtd62PUmy93e4neqIpl/view?usp=drive_link)
 
-### Networking
+### Weapons Time Out
 
-[![Networking video](https://drive.google.com/thumbnail?id=1QogUwkwfvCt8CpEnhmJ5yaR6vNqyB95J&sz=w800)](https://drive.google.com/file/d/1QogUwkwfvCt8CpEnhmJ5yaR6vNqyB95J/view?usp=drive_link)
+[![Weapons time out video](https://drive.google.com/thumbnail?id=1jX18TqekOSCyFvCWWCOWuGbxxxk-luf_&sz=w800)](https://drive.google.com/file/d/1jX18TqekOSCyFvCWWCOWuGbxxxk-luf_/view?usp=drive_link)
+
+### Success Sequence: Prisoner Escapes the House
+
+[![Prisoner success sequence video](https://drive.google.com/thumbnail?id=1S7r-0d9RUrznBYbPgrTs57r0MlyOVuCN&sz=w800)](https://drive.google.com/file/d/1S7r-0d9RUrznBYbPgrTs57r0MlyOVuCN/view?usp=drive_link)
 
 ## Next Steps
 
-We created a basic Prisoner avatar this sprint; it will be fully developed and added to the game in Sprint 3. Other main goals for Sprint 3:
+The Prisoner and Granny avatars are in the house as display models; in Sprint 4 they become the players' networked bodies. Other main goals for Sprint 4:
 
-- Connect the opening screens to the lobby, with roles claimed over the network
-- The full round: five-minute timer, random spawns and key placement, Granny's map, hiding spots and creaky floors
-- Win and lose conditions and their screens, including the locked front door
-- Finish the furniture in every room, then add sound effects, music and animations
-- Fix dizzying movement and VR bugs
+- Connect the opening screens and all scenes into one flow, with avatar spawn, ownership and scene sync over the network
+- Win and lose conditions, including the kill failure sequence, connected to their screens
+- Finish the round: Granny's map, hiding and movement animations for the Prisoner, creaky floors, and random item spawns
+- Sound effects for interactables, background music, and the final game UI
+- Build, test and playtest the full game loop on the Quest
 
 ## Game Rules
 
@@ -115,5 +161,5 @@ We created a basic Prisoner avatar this sprint; it will be fully developed and a
 5. **How AI connects to Unity:** No one used MCP. Most of the team worked through the Claude chat app: they uploaded scene files, errors, logs and screenshots, then dragged the scripts Claude wrote into the project and followed its steps in the Inspector. Claude Code (in the terminal and the VS Code extension) edits scripts directly in the project folder. We then run the tools and test in Unity.
 
 ## Sprint 2 - Meta Quest Build apk File
-https://drive.google.com/file/d/1NU0BPlyIS44M5-Xs3_rXw_uGw9a5JH_K/view?usp=drive_link
+https://drive.google.com/drive/folders/1fGFAT8R9jPw4YiYHkeoxlIzQ28Mq9Ea5?usp=drive_link
 
