@@ -17,12 +17,14 @@ public class Gun : MonoBehaviour
 
     XRGrabInteractable grab;
     Collider[] gunColliders;
+    NetworkGun networkGun;
     float lastFire = -999f;
 
     void Awake()
     {
         grab = GetComponent<XRGrabInteractable>();
         gunColliders = GetComponentsInChildren<Collider>();
+        networkGun = GetComponent<NetworkGun>();
     }
 
     void OnEnable() => grab.activated.AddListener(OnActivated);
@@ -32,12 +34,15 @@ public class Gun : MonoBehaviour
     {
         if (Time.time - lastFire < fireCooldown) return;
         lastFire = Time.time;
-        Fire();
+
+        // Online: tell both players, so the other side sees the shot too.
+        if (networkGun && networkGun.IsReady) networkGun.RequestFire();
+        else Fire();
     }
 
     // Right-click the component header in Play mode and choose "Fire" to test without a headset.
     [ContextMenu("Fire")]
-    void Fire()
+    public void Fire()
     {
         if (muzzle == null || bulletPrefab == null)
         {

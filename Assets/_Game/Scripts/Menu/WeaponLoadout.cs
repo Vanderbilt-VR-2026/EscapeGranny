@@ -1,8 +1,9 @@
 // WeaponLoadout.cs
 //
 // Granny's weapon picker. Tap a weapon to highlight it and read its description, then CONFIRM.
-// CONFIRM stays greyed out until a weapon is picked. After CONFIRM the choice is locked
-// (Granny can't change weapon), saved in GameSession, and the game starts.
+// CONFIRM stays greyed out until a weapon is picked. After CONFIRM the choice is saved in
+// GameSession and Granny's weapon tutorial is shown (READY there starts the game). If there's
+// no tutorial panel set up in MenuController, the game starts straight away instead.
 //
 // Setup: put this on GrannyLoadoutPanel. Fill the Options list (one entry per weapon) and hook up:
 //   each weapon Button OnClick -> WeaponLoadout.SelectWeapon, with the number of the weapon:
@@ -62,7 +63,8 @@ public class WeaponLoadout : MonoBehaviour
         locked = true;
         Refresh();
 
-        menuController.StartGame();
+        if (menuController.HasGrannyTutorial) menuController.ShowGrannyTutorial();
+        else menuController.StartGame();
     }
 
     private void Refresh()

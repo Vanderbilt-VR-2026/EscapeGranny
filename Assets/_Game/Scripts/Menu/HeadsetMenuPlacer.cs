@@ -150,7 +150,7 @@ public class HeadsetMenuPlacer : MonoBehaviour
         var body = rig.GetComponent<CharacterController>();
         if (body != null) body.enabled = false;
         rig.RotateAround(head.position, Vector3.up, degrees);
-        if (body != null) body.enabled = true;
+        if (body != null) OfflineGameLauncher.ReEnableBody(body);
     }
 
     // True once the headset reports both its position and rotation. Also used by the Lobby panel

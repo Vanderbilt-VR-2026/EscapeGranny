@@ -80,7 +80,7 @@ Personal test scenes: `Assets/_Game/Scenes/Test_<YourName>.unity`.
 
 ## Networking (Photon Fusion 2, Shared mode)
 - **`FusionNetworkManager`** (Lobby scene, DontDestroyOnLoad) owns the `NetworkRunner`, joins session
-  `"Room 1"` (MaxPlayers 2) in `GameMode.Shared`, and auto-reconnects by reloading the Lobby (runners are
+  `"EscapeGranny"` (set on the Lobby scene's manager; the script default is `"Room 1"`) (MaxPlayers 2) in `GameMode.Shared`, and auto-reconnects by reloading the Lobby (runners are
   single-use). It also runs Photon Voice, which is **off while `AppIdVoice` is empty** in
   `Assets/Photon/Fusion/Resources/PhotonAppSettings.asset` (`AppIdFusion` is set; don't change it).
 - The **shared-mode master client** spawns one **`Fusion Player Spawner and Lobby Controller`** prefab
@@ -111,7 +111,8 @@ Personal test scenes: `Assets/_Game/Scenes/Test_<YourName>.unity`.
 
 ## Editor tools (Tools → Escape Granny)
 - **Build House** / **Remove House**: generate or delete `House (generated)` (3 levels, walls with door gaps,
-  stairs, roof, door slots, markers, `EscapeTrigger`). ⚠️ **Rebuilding deletes everything inside it.** Put
+  stairs, roof, door slots, markers, `EscapeTrigger`). ⚠️ **Rebuilding deletes every generated piece inside it**
+  (objects with non-generated names are moved to `Placed Objects (keep)` first). Still, put
   props and scripts under separate roots (`House_Bishal` uses `Gameplay`). Change the layout in
   `BuildPlan()` in `HouseBuilder.cs`, keeping it in sync with `floor_plan.pdf`.
 - **Apply Horror Lighting**: exponential fog, near-black ambient, weak moonlight, one dim point lamp per room

@@ -9,6 +9,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 /// Put on Bomb_Root. Pull the Pin (a grabbable child) with the free hand to arm it.
 /// Once armed, the fuse starts when the bomb is released (thrown). After the explosion a fresh
 /// bomb appears at the hand that threw it.
+/// For multiplayer, also add NetworkBomb + XRGrabNetworkInteractable: then the same bomb is reset
+/// into the hand instead of a new local copy, so the other player sees it too.
 /// </summary>
 [RequireComponent(typeof(XRGrabInteractable), typeof(Rigidbody))]
 public class Bomb : MonoBehaviour
@@ -35,20 +37,36 @@ public class Bomb : MonoBehaviour
 
     XRGrabInteractable grab;
     Rigidbody rb;
+    NetworkBomb networkBomb;
     IXRSelectInteractor lastHolder;
     Vector3 pinRestLocalPos;
+    Quaternion pinRestLocalRot;
+    Rigidbody pinRb;
+    bool pinStartKinematic, pinStartGravity;
     Vector3 startPos;
     Quaternion startRot;
     bool armed, fuseStarted, exploded, pinReleased;
+    bool pinRequested;   // stops Update asking the network again while the RPC is on its way
+    bool resetHere;      // true on the headset that threw the bomb; only it puts the bomb back
+
+    bool Networked => networkBomb && networkBomb.IsReady;
 
     void Awake()
     {
         grab = GetComponent<XRGrabInteractable>();
         rb = GetComponent<Rigidbody>();
+        networkBomb = GetComponent<NetworkBomb>();
 
         if (pin != null)
         {
             pinRestLocalPos = pin.transform.localPosition;
+            pinRestLocalRot = pin.transform.localRotation;
+            pinRb = pin.GetComponent<Rigidbody>();
+            if (pinRb != null)
+            {
+                pinStartKinematic = pinRb.isKinematic;
+                pinStartGravity = pinRb.useGravity;
+            }
 
             // The pin must not physically push the bomb around.
             var pinCols = pin.GetComponentsInChildren<Collider>();
@@ -79,7 +97,7 @@ public class Bomb : MonoBehaviour
 
     void Update()
     {
-        if (armed || pin == null || !pin.isSelected) return;
+        if (armed || pinRequested || pin == null || !pin.isSelected) return;
 
         Vector3 rest = transform.TransformPoint(pinRestLocalPos);
         if (Vector3.Distance(pin.transform.position, rest) > pullDistance)
@@ -107,8 +125,20 @@ public class Bomb : MonoBehaviour
 
     void PullPin()
     {
+        if (armed || pinRequested) return;
+        pinRequested = true;
+
+        // Online: tell both players, so the other side also sees the pin come out.
+        if (Networked) networkBomb.RequestPullPin();
+        else ApplyPinPulled();
+    }
+
+    // Runs on every headset. On the other player's side nobody holds the pin, so it just drops.
+    public void ApplyPinPulled()
+    {
         if (armed) return;
         armed = true;
+        pinRequested = true;
         Debug.Log("Pin pulled, bomb armed");
 
         if (pin != null)
@@ -120,8 +150,6 @@ public class Bomb : MonoBehaviour
 
     IEnumerator DropPinWhenReleased()
     {
-        var pinRb = pin.GetComponent<Rigidbody>();
-
         while (pin != null && pin.isSelected) yield return null;
         yield return null; // let XRI finish restoring the rigidbody first
 
@@ -129,7 +157,8 @@ public class Bomb : MonoBehaviour
         {
             pinRb.isKinematic = false;
             pinRb.useGravity = true;
-            Destroy(pin.gameObject, 8f);
+            // Online the same pin goes back into the bomb on reset, so keep it.
+            if (!Networked) Destroy(pin.gameObject, 8f);
         }
         pinReleased = true;
     }
@@ -137,9 +166,26 @@ public class Bomb : MonoBehaviour
     void Explode()
     {
         if (exploded) return;
+
+        // Online: tell both players where it blew up. This headset (the thrower) puts it back afterwards.
+        if (Networked)
+        {
+            resetHere = true;
+            networkBomb.RequestExplode(transform.position);
+        }
+        else
+        {
+            ApplyExplosion(transform.position);
+            StartCoroutine(RespawnRoutine());
+        }
+    }
+
+    // Runs on every headset: push nearby objects, show the flash, hide the bomb.
+    public void ApplyExplosion(Vector3 pos)
+    {
+        if (exploded) return;
         exploded = true;
 
-        Vector3 pos = transform.position;
         startPos = pos;
         startRot = transform.rotation;
 
@@ -162,7 +208,52 @@ public class Bomb : MonoBehaviour
         grab.enabled = false;
         rb.isKinematic = true;
 
-        StartCoroutine(RespawnRoutine());
+        if (resetHere)
+        {
+            resetHere = false;
+            StartCoroutine(NetworkResetRoutine());
+        }
+    }
+
+    // Online only, on the thrower's headset: move the same bomb back to the hand, then show it again everywhere.
+    IEnumerator NetworkResetRoutine()
+    {
+        yield return new WaitForSeconds(respawnDelay);
+        while (!pinReleased) yield return null;
+
+        Transform hand = ThrowingHand();
+        networkBomb.Teleport(hand != null ? hand.position : startPos, hand != null ? hand.rotation : startRot);
+        networkBomb.RequestReset();
+        if (hand != null) HoverAt(hand);
+    }
+
+    // Runs on every headset: undo the explosion and put the pin back in.
+    public void ApplyReset()
+    {
+        armed = fuseStarted = exploded = pinRequested = pinReleased = false;
+
+        if (pin != null)
+        {
+            pin.transform.SetParent(transform, false);
+            pin.transform.localPosition = pinRestLocalPos;
+            pin.transform.localRotation = pinRestLocalRot;
+            if (pinRb != null)
+            {
+                pinRb.isKinematic = pinStartKinematic;
+                pinRb.useGravity = pinStartGravity;
+            }
+        }
+
+        foreach (var r in GetComponentsInChildren<Renderer>()) r.enabled = true;
+        foreach (var c in GetComponentsInChildren<Collider>()) c.enabled = true;
+        grab.enabled = true;
+        rb.isKinematic = false;
+    }
+
+    Transform ThrowingHand()
+    {
+        var holderComp = lastHolder as Component;
+        return holderComp != null ? lastHolder.GetAttachTransform(grab) : null;
     }
 
     IEnumerator RespawnRoutine()
@@ -171,9 +262,7 @@ public class Bomb : MonoBehaviour
 
         if (bombPrefab != null)
         {
-            Transform hand = null;
-            var holderComp = lastHolder as Component;
-            if (holderComp != null) hand = lastHolder.GetAttachTransform(grab);
+            Transform hand = ThrowingHand();
 
             Vector3 spawnPos = hand != null ? hand.position : startPos;
             Quaternion spawnRot = hand != null ? hand.rotation : startRot;
