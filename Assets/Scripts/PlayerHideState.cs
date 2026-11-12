@@ -1,43 +1,95 @@
+
 using Fusion;
 using UnityEngine;
 
-// PUT THIS ON THE NETWORK PLAYER PREFAB ROOT.
 public class PlayerHideState : NetworkBehaviour
 {
-    [Networked] public NetworkBool IsHidden { get; set; }
+    // The local player's instance on this client.
+    public static PlayerHideState LocalPlayer { get; private set; }
 
-    [SerializeField] Collider[] hitColliders;   // colliders the granny can hit/grab (NOT the Character Controller)
-    [SerializeField] AudioSource speaker;       // AudioSource on the "Speaker" object, if it has one
+    // This value is synchronized through Photon Fusion.
+    [Networked]
+    public NetworkBool IsHidden { get; set; }
 
-    Renderer[] avatarRenderers;
-    ChangeDetector _changes;
+    [Header("Avatar Visuals")]
+    [SerializeField]
+    private Transform visualRoot;
+
+    private Renderer[] avatarRenderers;
 
     public override void Spawned()
     {
-        avatarRenderers = GetComponentsInChildren<Renderer>(true);
-        _changes = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        Apply(IsHidden);
+        // Cache all renderers belonging to the avatar.
+        if (visualRoot != null)
+        {
+            avatarRenderers =
+                visualRoot.GetComponentsInChildren<Renderer>(true);
+        }
+        else
+        {
+            Debug.LogError(
+                "PlayerHideState: Assign Visual Root in Inspector."
+            );
+        }
+
+        // Identify this client's own player.
+        if (Object.HasInputAuthority)
+        {
+            LocalPlayer = this;
+        }
+
+        UpdateVisibility();
     }
 
+    // Called by Fusion when rendering networked objects.
     public override void Render()
     {
-        foreach (var change in _changes.DetectChanges(this))
-            if (change == nameof(IsHidden)) Apply(IsHidden);
+        UpdateVisibility();
     }
 
-    public void SetHidden(bool hidden)
+    // Called when the player selects the Hide prompt.
+    public void RequestHide()
     {
-        if (HasStateAuthority) IsHidden = hidden;
+        RPC_SetHidden(true);
     }
-    
-    void Apply(bool hidden)
+
+    // Called when the player exits the hiding spot.
+    public void RequestUnhide()
     {
-        // The owner keeps seeing their own hands; everyone else loses sight of them
-        if (!HasInputAuthority)
+        RPC_SetHidden(false);
+    }
+
+    // The request goes to the State Authority.
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_SetHidden(bool hidden)
+    {
+        IsHidden = hidden;
+    }
+
+    private void UpdateVisibility()
+    {
+        if (avatarRenderers == null)
+            return;
+
+        // Don't hide your own first-person avatar.
+        // Other clients hide this avatar when IsHidden is true.
+        bool shouldBeVisible =
+            !IsHidden || Object.HasInputAuthority;
+
+        foreach (Renderer avatarRenderer in avatarRenderers)
         {
-            foreach (var r in avatarRenderers) r.enabled = !hidden;
-            if (speaker != null) speaker.mute = hidden;
+            if (avatarRenderer != null)
+            {
+                avatarRenderer.enabled = shouldBeVisible;
+            }
         }
-        foreach (var c in hitColliders) c.enabled = !hidden;
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (LocalPlayer == this)
+        {
+            LocalPlayer = null;
+        }
     }
 }
