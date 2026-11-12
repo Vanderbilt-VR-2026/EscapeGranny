@@ -91658,6 +91658,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuRoomPicker
   rig: {fileID: 11789716}
+  useFixedSpot: 1
+  fixedPosition: {x: 14.5, y: 0, z: 4}
+  fixedYaw: 0
+  maxWaitSeconds: 2.5
   markerGroups:
   - Prisoner Spawns
   - Granny Spawns
@@ -107676,7 +107680,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a6303f66e68042039ff7c23c5c599f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClickProbe
-  button: {fileID: 0}
 --- !u!1 &1746711950
 GameObject:
   m_ObjectHideFlags: 0
@@ -107735,6 +107738,8 @@ MonoBehaviour:
   menuController: {fileID: 1770882512}
   headingText: {fileID: 550429601}
   bodyText: {fileID: 267321605}
+  bodyFontSize: 18
+  bodyFontSizeNoVideo: 24
   bombFuseSeconds: 2.5
   gripRule: Keep holding the side GRIP button the whole time. If you let go you'll
     drop your weapon, and the noise will reveal your position.
