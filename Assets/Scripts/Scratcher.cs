@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 /// <summary>
 /// Put on Knife_Root and Axe_Root (needs a Rigidbody).
@@ -7,6 +9,9 @@ using UnityEngine;
 /// other objects). Dragging draws ONE smooth line per stroke (a LineRenderer); a fast hit leaves
 /// a short gash. This does not rely on OnCollision callbacks, so it still works when a bigger
 /// handle collider is what physically stops the object.
+/// Sounds: a slash when the moving blade hits something new (wall, furniture, floor), and a different
+/// one when it hits the other player. Each headset detects hits itself, so both players hear them.
+/// Leave the clips empty to use the placeholders from Tools > Escape Granny > Generate Weapon Sounds.
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class Scratcher : MonoBehaviour
@@ -36,6 +41,20 @@ public class Scratcher : MonoBehaviour
     [SerializeField] float chopLength = 0.04f;
     [SerializeField] int maxStrokes = 60;
 
+    [Header("Hit sounds (empty = use Resources/WeaponSounds/BladeHitSurface, BladeHitPlayer)")]
+    [SerializeField] AudioClip surfaceHitSound;
+    [SerializeField] AudioClip playerHitSound;
+    [Tooltip("The blade must be moving at least this fast (m/s) to make a hit sound, so resting it on a table is quiet.")]
+    [SerializeField] float minHitSpeed = 0.8f;
+    [Tooltip("Hits at this speed (m/s) or faster are full volume.")]
+    [SerializeField] float fullVolumeHitSpeed = 4f;
+    [SerializeField, Range(0f, 1f)] float hitVolume = 0.9f;
+    [Tooltip("Shortest time (s) between two hit sounds, so a jittery contact doesn't rattle.")]
+    [SerializeField] float hitSoundCooldown = 0.15f;
+    [Tooltip("1 = as recorded. Try about 0.8 on the axe for a heavier, deeper sound.")]
+    [SerializeField, Range(0.5f, 1.5f)] float hitPitch = 1f;
+    [SerializeField] float hitHearingDistance = 15f;
+
     [Tooltip("Logs what the blade starts touching. Turn off once scratching works.")]
     [SerializeField] bool debugContacts = false;
 
@@ -51,9 +70,23 @@ public class Scratcher : MonoBehaviour
     float lastContactTime;
     bool wasTouching;
 
+    XRGrabInteractable grab;
+    NetworkObject networkObject;
+    Vector3 lastBladeCenter;
+    float bladeSpeed;          // measured from movement, so it also works on the other player's copy
+    Collider lastHitCollider;  // a new sound plays only when the blade touches something new
+    float lastHitSoundTime = -999f;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        grab = GetComponent<XRGrabInteractable>();
+        networkObject = GetComponent<NetworkObject>();
+
+        // Placeholders from Tools > Escape Granny > Generate Weapon Sounds, if none are dragged in.
+        if (surfaceHitSound == null) surfaceHitSound = Resources.Load<AudioClip>("WeaponSounds/BladeHitSurface");
+        if (playerHitSound == null) playerHitSound = Resources.Load<AudioClip>("WeaponSounds/BladeHitPlayer");
+        DropSound.Ensure(gameObject, "DropHeavy"); // clank when the knife/axe lands on the floor
 
         var list = new List<Collider>();
         if (bladeColliders != null)
@@ -65,6 +98,7 @@ public class Scratcher : MonoBehaviour
                 if (!c.isTrigger) list.Add(c);
 
         blades = list.ToArray();
+        lastBladeCenter = BladeCenter();
     }
 
     void FixedUpdate()
@@ -84,12 +118,22 @@ public class Scratcher : MonoBehaviour
             lastTouched = other;
         }
 
+        UpdateHitSound(touching, p, other);
+
         wasTouching = touching;
         previousVelocity = rb.linearVelocity;
     }
 
     void Update()
     {
+        // Blade speed from how far it moved this frame. Rigidbody velocity would be 0 on the other
+        // player's headset, where Fusion moves the weapon directly. Keep the peak for a moment, since
+        // the network moves it in small jumps.
+        Vector3 center = BladeCenter();
+        float frameSpeed = Time.deltaTime > 0f ? Vector3.Distance(center, lastBladeCenter) / Time.deltaTime : 0f;
+        lastBladeCenter = center;
+        bladeSpeed = Mathf.Max(frameSpeed, Mathf.MoveTowards(bladeSpeed, 0f, 20f * Time.deltaTime));
+
         if (current != null && Time.time - lastContactTime > gapTolerance)
             EndStroke();
     }
@@ -172,6 +216,89 @@ public class Scratcher : MonoBehaviour
             normal = hit.normal;
         }
         return true;
+    }
+
+    // ---------- hit sounds ----------
+    // Each headset checks for itself, so both players hear the hit without any networking.
+
+    void UpdateHitSound(bool touchingSurface, Vector3 surfacePoint, Collider surface)
+    {
+        // A player counts first, so slashing someone standing against a wall sounds like hitting them.
+        bool hitPlayer = FindPlayerContact(out Collider hit, out Vector3 point);
+        // Any player's body (including the holder's own) is never treated as a wall.
+        if (!hitPlayer && touchingSurface && !IsAnyPlayer(surface))
+        {
+            hit = surface;
+            point = surfacePoint;
+        }
+
+        if (hit != null && hit != lastHitCollider
+            && bladeSpeed >= minHitSpeed && Time.time - lastHitSoundTime >= hitSoundCooldown)
+        {
+            lastHitSoundTime = Time.time;
+            float volume = hitVolume * Mathf.Lerp(0.4f, 1f, Mathf.InverseLerp(minHitSpeed, fullVolumeHitSpeed, bladeSpeed));
+            OneShotSound.PlayAt(hitPlayer ? playerHitSound : surfaceHitSound, point, volume,
+                                hitHearingDistance, 1.5f, 0.1f, hitPitch);
+        }
+        lastHitCollider = hit;
+    }
+
+    // The player's body colliders are triggers, which the scratch check skips, so look for them separately.
+    bool FindPlayerContact(out Collider touched, out Vector3 point)
+    {
+        touched = null;
+        point = Vector3.zero;
+        foreach (var blade in blades)
+        {
+            if (blade == null || !blade.enabled) continue;
+            Bounds b = blade.bounds;
+            int count = Physics.OverlapBoxNonAlloc(b.center, b.extents + Vector3.one * touchDistance, overlapBuffer,
+                                                   Quaternion.identity, ~0, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < count; i++)
+            {
+                Collider other = overlapBuffer[i];
+                if (other == null || other.attachedRigidbody == rb || !IsPlayerBody(other)) continue;
+                touched = other;
+                point = other.ClosestPoint(b.center);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // True for the body of the player being attacked, never the one holding this weapon.
+    bool IsPlayerBody(Collider c)
+    {
+        if (c == null) return false;
+        bool heldHere = grab != null && grab.isSelected; // only the holder's headset sees it as selected
+
+        // Network avatars (online). Each player's avatar is "owned" (state authority) by that player.
+        var avatar = c.GetComponentInParent<FusionNetworkPlayer>();
+        if (avatar != null)
+        {
+            if (avatar.Object == null || !avatar.Object.IsValid) return false;
+            if (heldHere) return !avatar.HasStateAuthority; // anyone but me
+            // Held on the other headset: grabbing gives the holder authority over the weapon, so skip their avatar.
+            return networkObject == null || !networkObject.IsValid
+                || avatar.Object.StateAuthority != networkObject.StateAuthority;
+        }
+
+        // This headset's own body. It's being hit only if someone else is holding the weapon.
+        if (c is CharacterController) return !heldHere;
+        return false;
+    }
+
+    static bool IsAnyPlayer(Collider c) =>
+        c != null && (c is CharacterController || c.GetComponentInParent<FusionNetworkPlayer>() != null);
+
+    Vector3 BladeCenter()
+    {
+        if (blades == null || blades.Length == 0) return transform.position;
+        Vector3 sum = Vector3.zero;
+        int n = 0;
+        foreach (var blade in blades)
+            if (blade != null) { sum += blade.bounds.center; n++; }
+        return n > 0 ? sum / n : transform.position;
     }
 
     // ---------- strokes ----------

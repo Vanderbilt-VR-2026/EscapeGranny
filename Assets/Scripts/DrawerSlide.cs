@@ -2,6 +2,7 @@ using UnityEngine;
 
 // Put this on the DRAWER object. One select slides it out, the next slides it back in.
 // Uses the IInteractable interface defined in Door.cs, so keep Door.cs in the project.
+// Sounds (slide on open, knock on close) are added automatically: see OpenCloseSound.
 public class DrawerSlide : MonoBehaviour, IInteractable
 {
     [SerializeField] private Vector3 openOffset = new Vector3(0f, 0f, 0.4f); // local-space pull direction and distance
@@ -12,9 +13,13 @@ public class DrawerSlide : MonoBehaviour, IInteractable
     private Vector3 closedPosition;
     private Vector3 openPosition;
     private float progress; // 0 = closed, 1 = open
+    private OpenCloseSound sound;
 
     private void Awake()
     {
+        // Wooden slide when it opens, a knock when it shuts (see OpenCloseSound).
+        sound = OpenCloseSound.Ensure(gameObject, OpenCloseSound.Size.Drawer);
+
         closedPosition = transform.localPosition;
         openPosition = closedPosition + openOffset;
         progress = isOpen ? 1f : 0f;
@@ -33,5 +38,7 @@ public class DrawerSlide : MonoBehaviour, IInteractable
 
         transform.localPosition = Vector3.LerpUnclamped(
             closedPosition, openPosition, easing.Evaluate(progress));
+
+        sound.Tick(isOpen, progress <= 0.02f);
     }
 }
