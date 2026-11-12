@@ -3,9 +3,8 @@
 // Builds the character preview on the right of the role select screen, like Fortnite's locker: the
 // picked role's 3D character turns slowly on a round stand, lit from behind in the role's colour.
 //   Granny    the team's Granny model (Assets/Avatars/GrannyAvatar.fbx with GrannySkin)
-//   Prisoner  a PLACEHOLDER: a black silhouette (head, shoulders, body), the "character not
-//             revealed yet" look. Swap in the real model when it's ready by giving
-//             PrisonerModelPath a prefab/FBX path.
+//   Prisoner  the team's Prisoner avatar (Assets/Avatars/Prisoner/Prisoner Character.prefab), playing
+//             its breathing idle. If that prefab is missing it falls back to a black silhouette.
 // RoleSelector shows only the picked role's preview.
 //
 // How to use: runs automatically from Tools > Escape Granny > Build Main Menu (MainMenuSceneBuilder).
@@ -18,7 +17,7 @@ public static class RoleCardModelBuilder
 {
     const string GrannyModelPath = "Assets/Avatars/GrannyAvatar.fbx";
     const string GrannyMaterialPath = "Assets/Avatars/GrannySkin.mat";
-    const string PrisonerModelPath = ""; // empty = use the silhouette placeholder
+    const string PrisonerModelPath = "Assets/Avatars/Prisoner/Prisoner Character.prefab"; // empty = silhouette
     const string SilhouetteMaterialPath = "Assets/_Game/Materials/MenuSilhouette.mat";
     const string StandMaterialPath = "Assets/_Game/Materials/MenuStand.mat";
 
@@ -32,6 +31,8 @@ public static class RoleCardModelBuilder
     const float StandHeight = 24f;
     const float Padding = 10f;
     const float FrontOffset = 60f;
+    // Both stands are this wide (UI units; the stage is 280 wide), whatever the character's shape.
+    const float StandDiameter = 150f;
 
     // Fills the two preview stages. Returns how many models were added. The caller saves the scene.
     public static int AddModels(RectTransform grannyStage, RectTransform prisonerStage, Color grannyRim, Color prisonerRim)
@@ -56,18 +57,34 @@ public static class RoleCardModelBuilder
             added++;
         }
 
-        var prisonerPrefab = string.IsNullOrEmpty(PrisonerModelPath)
-            ? null : AssetDatabase.LoadAssetAtPath<GameObject>(PrisonerModelPath);
-        var prisoner = prisonerPrefab != null
-            ? (GameObject)PrefabUtility.InstantiatePrefab(prisonerPrefab, prisonerStage.gameObject.scene)
-            : BuildSilhouette();
-        PlaceOnStand(prisoner, prisonerStage, PrisonerYaw, prisonerRim);
+        PlaceOnStand(CreatePrisoner(prisonerStage), prisonerStage, PrisonerYaw, prisonerRim);
         added++;
         return added;
     }
 
-    // Fits the model into the stage (keeping its proportions), standing on a round stand at the
-    // bottom, a little in front of the menu, turning like a turntable.
+    // The prisoner avatar, or the black silhouette if the prefab isn't there.
+    static GameObject CreatePrisoner(RectTransform stage)
+    {
+        var prefab = string.IsNullOrEmpty(PrisonerModelPath)
+            ? null : AssetDatabase.LoadAssetAtPath<GameObject>(PrisonerModelPath);
+        if (prefab == null)
+        {
+            if (!string.IsNullOrEmpty(PrisonerModelPath))
+                Debug.LogWarning("[RoleCardModelBuilder] Couldn't find the Prisoner model at " + PrisonerModelPath + ". Using the silhouette.");
+            return BuildSilhouette();
+        }
+
+        var prisoner = (GameObject)PrefabUtility.InstantiatePrefab(prefab, stage.gameObject.scene);
+        // Imported character meshes can carry wrong bounds, so Unity thinks they're off-screen and
+        // skips drawing them (same fix as NetworkAvatarBody).
+        foreach (var skinned in prisoner.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            skinned.updateWhenOffscreen = true;
+        return prisoner;
+    }
+
+    // Scales the model to the stage's height (keeping its proportions), standing on a round stand at
+    // the bottom, a little in front of the menu, turning like a turntable. Sizing by height only
+    // (not width too) keeps Granny and the Prisoner the same height even though their poses differ.
     static void PlaceOnStand(GameObject model, RectTransform stage, float yaw, Color rim)
     {
         model.name = "Model";
@@ -81,14 +98,12 @@ public static class RoleCardModelBuilder
         var rect = stage.rect;
         float uiToWorld = stage.lossyScale.x;
         var bounds = GetBounds(model);
-        float fit = Mathf.Min((rect.width - 2f * Padding) * uiToWorld / Mathf.Max(bounds.size.x, 0.0001f),
-                              (rect.height - Padding - StandHeight) * uiToWorld / Mathf.Max(bounds.size.y, 0.0001f));
+        float fit = (rect.height - Padding - StandHeight) * uiToWorld / Mathf.Max(bounds.size.y, 0.0001f);
         model.transform.localScale *= fit;
         bounds = GetBounds(model);
 
         // Feet on the stand: bottom-centre of the model goes to the stand's top, in front of the menu.
-        float depth = Mathf.Max(bounds.size.x, bounds.size.z) / uiToWorld; // it turns, so its widest side
-        var feet = stage.TransformPoint(new Vector3(rect.center.x, rect.yMin + StandHeight, -(depth / 2f + FrontOffset)));
+        var feet = stage.TransformPoint(new Vector3(rect.center.x, rect.yMin + StandHeight, -(StandDiameter / 2f + FrontOffset)));
         var bottomCentre = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
         model.transform.position += feet - bottomCentre;
         model.transform.SetParent(stage, true);
@@ -99,17 +114,16 @@ public static class RoleCardModelBuilder
         so.FindProperty("breathe").floatValue = 0.012f;
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        AddStand(stage, feet, depth * uiToWorld);
-        AddRimLight(stage, feet, rim);
+        AddStand(stage, feet, StandDiameter * uiToWorld);
+        AddRimLight(stage, feet, rim, uiToWorld);
     }
 
     // A dark round stand under the feet (it doesn't turn; only the character does).
-    static void AddStand(RectTransform stage, Vector3 feet, float modelWidth)
+    static void AddStand(RectTransform stage, Vector3 feet, float diameter)
     {
         var stand = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         stand.name = "Stand";
         Object.DestroyImmediate(stand.GetComponent<Collider>());
-        float diameter = Mathf.Max(modelWidth * 1.3f, 0.15f);
         const float thickness = 0.02f;
         stand.transform.localScale = new Vector3(diameter, thickness / 2f, diameter); // a cylinder is 2 units tall
         stand.transform.position = feet - Vector3.up * thickness / 2f;
@@ -118,17 +132,18 @@ public static class RoleCardModelBuilder
         stand.transform.SetParent(stage, true);
     }
 
-    // Coloured light behind and above the character: outlines it against the dark menu.
-    static void AddRimLight(RectTransform stage, Vector3 feet, Color color)
+    // Coloured light behind and above the character: outlines it against the dark menu. Distances are
+    // in UI units, so the light grows with the menu.
+    static void AddRimLight(RectTransform stage, Vector3 feet, Color color, float uiToWorld)
     {
         var go = new GameObject("RimLight");
         go.transform.SetParent(stage, false);
-        go.transform.position = feet + stage.up * 0.45f + stage.forward * 0.25f; // forward = away from the player
+        go.transform.position = feet + (stage.up * 225f + stage.forward * 125f) * uiToWorld; // forward = away from the player
         var light = go.AddComponent<Light>();
         light.type = LightType.Point;
         light.color = color;
         light.intensity = 3f;
-        light.range = 0.8f; // metres: only reaches this character
+        light.range = 400f * uiToWorld; // only reaches this character
         light.shadows = LightShadows.None;
     }
 
