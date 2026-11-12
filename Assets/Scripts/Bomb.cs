@@ -230,7 +230,7 @@ public class Bomb : MonoBehaviour
             if (hit.GetComponent<PlayerHitbox>() == null) continue;
             float distance = Vector3.Distance(pos, hit.ClosestPoint(pos));
             int damage = distance <= killRadius ? closeDamage : farDamage;
-            if (damage > 0) PlayerHitbox.TryHit(hit, damage);
+            if (damage > 0) PlayerHitbox.TryHit(hit, damage, hit.ClosestPoint(pos));
         }
     }
 

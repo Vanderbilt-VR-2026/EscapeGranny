@@ -904,6 +904,7 @@ MonoBehaviour:
   grannySpeed: 0.75
   floorSearchDistance: 4
   _Role: 0
+  fallSeconds: 0.8
 --- !u!114 &3998559762632711205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -941,6 +942,8 @@ MonoBehaviour:
   hitboxHeight: 1.7
   hitboxRadius: 0.3
   endRoundDelay: 5
+  bloodMaterial: {fileID: 2100000, guid: 0dd36e1e8a325d941bdf3d1a98686b5b, type: 2}
+  _LastHitPoint: {x: 0, y: 0, z: 0}
   _Damage: 0
 =======
   m_Script: {fileID: 11500000, guid: e29a2395646d69a44971cc9371a71f68, type: 3}

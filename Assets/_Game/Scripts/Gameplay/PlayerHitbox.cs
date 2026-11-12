@@ -3,18 +3,19 @@ using UnityEngine;
 /// <summary>
 /// The invisible body-shaped trigger that weapons hit. PrisonerHealth creates it at runtime and
 /// keeps it on the Prisoner's body, so there is nothing to set up.
-/// Weapons call PlayerHitbox.TryHit(collider, damage) when they touch something.
+/// Weapons call PlayerHitbox.TryHit(collider, damage, point) when they touch something; the point is
+/// where the blood sprays.
 /// </summary>
 public class PlayerHitbox : MonoBehaviour
 {
     public PrisonerHealth Health { get; set; }
 
     // True if the collider is a player's hitbox (the hit was passed on to that player's health).
-    public static bool TryHit(Collider other, int damage)
+    public static bool TryHit(Collider other, int damage, Vector3 point)
     {
         var hitbox = other.GetComponent<PlayerHitbox>();
         if (hitbox == null || hitbox.Health == null) return false;
-        hitbox.Health.TakeHit(damage);
+        hitbox.Health.TakeHit(damage, point);
         return true;
     }
 }

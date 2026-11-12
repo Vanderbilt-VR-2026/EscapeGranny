@@ -11,7 +11,10 @@ using UnityEngine.SceneManagement;
 /// Weapons hit an invisible capsule this script keeps on the Prisoner's body (PlayerHitbox).
 /// The attacker's headset detects the hit and asks the Prisoner's headset (the owner) to lower the
 /// health, so a hit only counts once.
-/// Setup: put this on the Network Player prefab root, next to NetworkAvatarBody.
+/// Every hit sprays blood where it landed, and the killing hit makes the Prisoner's body fall over,
+/// on both headsets (they both see Damage change).
+/// Setup: put this on the Network Player prefab root, next to NetworkAvatarBody, and drag a dark red
+/// particle material into Blood Material.
 /// </summary>
 [RequireComponent(typeof(NetworkObject), typeof(NetworkAvatarBody))]
 public class PrisonerHealth : NetworkBehaviour
@@ -25,6 +28,11 @@ public class PrisonerHealth : NetworkBehaviour
     [SerializeField] private float hitboxRadius = 0.3f;
     [Tooltip("Seconds the GRANNY WINS message shows before everyone goes back to the Lobby.")]
     [SerializeField, Min(0f)] private float endRoundDelay = 5f;
+    [Tooltip("Material for the blood drops: Universal Render Pipeline/Particles/Unlit, dark red.")]
+    [SerializeField] private Material bloodMaterial;
+
+    // Where the last hit landed, so both headsets spray blood in the same spot. Set before Damage.
+    [Networked] public Vector3 LastHitPoint { get; private set; }
 
     // How many hits the Prisoner has taken. Fusion copies it to the other player.
     [Networked, OnChangedRender(nameof(OnDamageChanged))]
@@ -37,6 +45,7 @@ public class PrisonerHealth : NetworkBehaviour
     private PlayerHideState hideState;
     private CapsuleCollider hitbox;
     private bool roundEnding;
+    private int shownDamage; // the Damage this headset has already shown blood for
 
     public override void Spawned()
     {
@@ -52,22 +61,24 @@ public class PrisonerHealth : NetworkBehaviour
         go.AddComponent<PlayerHitbox>().Health = this;
 
         if (HasStateAuthority) PlayerSpeed.SetInjured(1f);
+        shownDamage = Damage;
     }
 
     // Called by weapons on the attacker's headset. Ignored on the Prisoner's own headset, so the
     // Prisoner can't hurt themselves by waving a weapon around.
-    public void TakeHit(int amount)
+    public void TakeHit(int amount, Vector3 point)
     {
         if (!Object || !Object.IsValid || HasStateAuthority || IsDead) return;
-        RpcTakeHit(amount);
+        RpcTakeHit(amount, point);
     }
 
     // Runs on the Prisoner's headset, which owns the health.
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RpcTakeHit(int amount)
+    private void RpcTakeHit(int amount, Vector3 point)
     {
         if (IsDead || avatar.Role != PlayerRole.Prisoner) return;
         if (hideState != null && hideState.IsHidden) return;
+        LastHitPoint = point;
         Damage = Mathf.Min(maxHealth, Damage + amount);
     }
 
@@ -76,9 +87,20 @@ public class PrisonerHealth : NetworkBehaviour
         Debug.Log($"[PrisonerHealth] Prisoner hit: {Damage}/{maxHealth}{(IsDead ? ", dead" : "")}");
         if (HasStateAuthority) PlayerSpeed.SetInjured(IsInjured ? injuredSpeed : 1f);
 
+        if (Damage > shownDamage)
+        {
+            // Spray outwards from the middle of the body, through the hit point.
+            Vector3 centre = avatar.FeetPosition + Vector3.up * (hitboxHeight / 2f);
+            Vector3 outwards = LastHitPoint - centre;
+            outwards.y = Mathf.Max(outwards.y, 0.2f);
+            BloodEffect.Spawn(LastHitPoint, outwards, bloodMaterial);
+        }
+        shownDamage = Damage;
+
         if (IsDead && !roundEnding)
         {
             roundEnding = true;
+            avatar.FallOver();
             FloatingMessage.Show("GRANNY WINS", Color.red);
             StartCoroutine(EndRound());
         }
