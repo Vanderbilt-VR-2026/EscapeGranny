@@ -1,64 +1,34 @@
-using Fusion;
+
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Interactables; // XRI 3.x. Remove this line on XRI 2.x.
 
-// PUT THIS ON EACH BED/LOCKER (needs a NetworkObject, placed in the scene).
-public class HidingSpot : NetworkBehaviour
+// Attach this to the BED.
+// This is a regular Unity component, NOT a NetworkBehaviour.
+public class HidingSpot : MonoBehaviour
 {
-    [Networked] public NetworkBool Occupied { get; set; }
+    [Header("Hiding Positions")]
+    [SerializeField] private Transform hidePoint;
+    [SerializeField] private Transform exitPoint;
 
-    [SerializeField] Transform hidePoint, exitPoint;
-    [SerializeField] XRSimpleInteractable interactable;
+    // Local occupancy only. The bed is not networked.
+    public bool Occupied { get; private set; }
 
+    // Reference to the local player's VR rig.
     public static LocalPlayerRig LocalRig;
 
-    void Awake()     => interactable.selectEntered.AddListener(OnSelected);
-    void OnDestroy() => interactable.selectEntered.RemoveListener(OnSelected);
+    public Transform HidePoint => hidePoint;
+    public Transform ExitPoint => exitPoint;
 
-    void OnSelected(SelectEnterEventArgs args)
+    public bool TryOccupy()
     {
-        if (Object == null || !Object.IsValid)
-        {
-            Debug.LogWarning("[Hide] Bed isn't spawned by Fusion, skipping the network request (offline test).");
-            return;
-        }
-        RPC_RequestHide();
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    void RPC_RequestHide(RpcInfo info = default)
-    {
-        Debug.Log($"[Hide] RequestHide received from {info.Source}, Occupied={Occupied}");
-        if (Occupied) return;
-        var playerObj = Runner.GetPlayerObject(info.Source);
-        if (playerObj == null) return; // spawner must call runner.SetPlayerObject(...)
+        if (Occupied)
+            return false;
 
         Occupied = true;
-        playerObj.GetComponent<PlayerHideState>().IsHidden = true;
-        RPC_Enter(info.Source);
+        return true;
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_RequestExit(RpcInfo info = default)
+    public void Release()
     {
-        var playerObj = Runner.GetPlayerObject(info.Source);
-        if (playerObj != null)
-            playerObj.GetComponent<PlayerHideState>().IsHidden = false;
         Occupied = false;
-        RPC_Exit(info.Source);
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    void RPC_Enter(PlayerRef who)
-    {
-        Debug.Log($"[Hide] Enter for {who}, local={Runner.LocalPlayer}, LocalRig null? {LocalRig == null}");
-        if (who == Runner.LocalPlayer && LocalRig != null) LocalRig.EnterHiding(hidePoint, this);
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    void RPC_Exit(PlayerRef who)
-    {
-        if (who == Runner.LocalPlayer && LocalRig != null) LocalRig.ExitHiding(exitPoint);
     }
 }

@@ -64,4 +64,14 @@ public class XRGrabNetworkInteractable : NetworkBehaviour, IStateAuthorityChange
         body.WakeUp();
         // Allow State Authority Override lets the next grabber take over without releasing it here.
     }
+
+    // Drop sounds: only the authority's physics sees the object land, so it tells everyone to play
+    // the sound (see DropSound).
+    public void RequestDropSound(Vector3 position, float volume) => RpcDropSound(position, volume);
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RpcDropSound(Vector3 position, float volume)
+    {
+        if (TryGetComponent<DropSound>(out var dropSound)) dropSound.Play(position, volume);
+    }
 }
