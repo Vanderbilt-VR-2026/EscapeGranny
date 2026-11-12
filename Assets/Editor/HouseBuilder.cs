@@ -437,6 +437,7 @@ public static class HouseBuilder
             Undo.RecordObject(l, "Horror Lighting");
             l.intensity = 0.08f;
             l.color = new Color(0.55f, 0.62f, 0.8f);
+            l.shadows = LightShadows.None; // shadows are expensive on Quest (same as the lamps below)
         }
 
         // One dim, warm bulb near the ceiling of each room
