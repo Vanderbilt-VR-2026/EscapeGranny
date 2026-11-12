@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1638209773}
   - component: {fileID: 1638209775}
   - component: {fileID: 1638209774}
+  - component: {fileID: 3349043284205246949}
   m_Layer: 0
   m_Name: Fusion Player Spawner and Lobby Controller
   m_TagString: Untagged
@@ -52,6 +53,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 1638209774}
+  - {fileID: 3349043284205246949}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &1638209774
 MonoBehaviour:
@@ -74,3 +76,22 @@ MonoBehaviour:
   PlayerSpawnSpacing: 0.7
   _CountdownEndTime: 0
   _SpawnPlayers: []
+--- !u!114 &3349043284205246949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1638209770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38696a7faf2da154e82aa8bf835909ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkRoleSelect
+  houseSceneBuildIndex: 2
+  maxTrackingWait: 2.5
+  _GrannyWeapon: 0
+  _GrannyReady:
+    RawValue: 0
+  _PrisonerReady:
+    RawValue: 0

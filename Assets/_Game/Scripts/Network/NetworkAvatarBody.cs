@@ -43,7 +43,7 @@ public class NetworkAvatarBody : NetworkBehaviour
     private float pivotAboveFeet; // the model's pivot can be at its feet or its middle
     private readonly RaycastHit[] floorHits = new RaycastHit[8];
     // Renderers kept switched off: the dummy shapes everywhere, plus our own body on our own headset.
-    // Re-checked every frame because PlayerHideState switches all renderers back on when hiding ends.
+    // Re-checked every frame because PlayerHideState switches all renderers back on (see LateUpdate).
     private readonly System.Collections.Generic.List<Renderer> keepHidden = new System.Collections.Generic.List<Renderer>();
 
     public override void Spawned()
@@ -58,6 +58,13 @@ public class NetworkAvatarBody : NetworkBehaviour
 
     private PlayerRole PickRole()
     {
+        // Networked start menu: the role this player claimed there.
+        var select = NetworkRoleSelect.Instance;
+        if (select != null && select.IsReady)
+        {
+            var claimed = select.RoleOf(Runner.LocalPlayer);
+            if (claimed != PlayerRole.None) return claimed;
+        }
         if (GameSession.Instance != null && GameSession.Instance.SelectedRole != PlayerRole.None)
             return GameSession.Instance.SelectedRole;
         return Runner.IsSharedModeMasterClient ? PlayerRole.Granny : PlayerRole.Prisoner;
@@ -96,12 +103,19 @@ public class NetworkAvatarBody : NetworkBehaviour
     public override void Render()
     {
         if (activeBody == null || head == null) return;
-        foreach (var r in keepHidden) if (r != null && r.enabled) r.enabled = false;
 
         var body = activeBody.transform;
         FeetPosition = new Vector3(head.position.x, FloorBelowHead(), head.position.z);
         body.position = FeetPosition + Vector3.up * pivotAboveFeet;
         body.rotation = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
+    }
+
+    // PlayerHideState switches every renderer under Avatar Visuals back on each frame (in Render), so
+    // hide ours again in LateUpdate, which always runs after Fusion's Render. Only ever switches off,
+    // so hiding a Prisoner from the other player still works.
+    private void LateUpdate()
+    {
+        foreach (var r in keepHidden) if (r != null && r.enabled) r.enabled = false;
     }
 
     // Height of the nearest floor under the head. Starts a little above the head, because without a

@@ -664,14 +664,13 @@ MonoBehaviour:
   maxVolume: 0.8
   minVolume: 0.25
   pitchVariation: 0.1
+  strideVariation: 0.15
+  volumeVariation: 0.15
+  footSpacing: 0.12
   teleportDistance: 1
   feetBelowHead: 1.4
   fullVolumeDistance: 1.5
   hearingDistance: 12
-  groundFloorY: 0
-  floorHeight: 3
-  fromAboveVolume: 0.4
-  fromAboveMuffleHz: 900
 --- !u!1 &7701784339999434686
 GameObject:
   m_ObjectHideFlags: 0
@@ -687,6 +686,7 @@ GameObject:
   - component: {fileID: 1629496386487407874}
   - component: {fileID: 7784538375605908676}
   - component: {fileID: 3998559762632711205}
+  - component: {fileID: 3600412839761921956}
   m_Layer: 0
   m_Name: Network Player
   m_TagString: Untagged
@@ -808,6 +808,7 @@ MonoBehaviour:
   - {fileID: 1629496386487407874}
   - {fileID: 7784538375605908676}
   - {fileID: 3998559762632711205}
+  - {fileID: 3600412839761921956}
   - {fileID: 2470653021265241310}
   - {fileID: 2077464846767201479}
   - {fileID: 6406758778535878969}
@@ -892,6 +893,7 @@ MonoBehaviour:
   - {fileID: 6655800574103219481}
   grannyHeight: 1.65
   prisonerHeight: 1.75
+  grannySpeed: 0.75
   floorSearchDistance: 4
   _Role: 0
 --- !u!114 &3998559762632711205
@@ -909,6 +911,24 @@ MonoBehaviour:
   _IsHidden:
     RawValue: 0
   visualRoot: {fileID: 971316409013117624}
+--- !u!114 &3600412839761921956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7701784339999434686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f43d264ab454db4d9d23e21ee5c4211, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PrisonerHealth
+  maxHealth: 2
+  injuredSpeed: 0.8
+  hitboxHeight: 1.7
+  hitboxRadius: 0.3
+  endRoundDelay: 5
+  _Damage: 0
 --- !u!1 &7858100408922421796
 GameObject:
   m_ObjectHideFlags: 0

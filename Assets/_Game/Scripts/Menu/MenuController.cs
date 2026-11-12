@@ -38,8 +38,8 @@ public class MenuController : MonoBehaviour
     public bool HasGrannyTutorial => grannyTutorialPanel != null;
 
     // Called when the player is ready (Granny pressed READY on her weapon tutorial, or the prisoner pressed READY).
-    // For now this loads the house offline (one headset, no Photon) for testing; the networked
-    // version will go through the Lobby instead.
+    // Online (reached from the Lobby): tells the other player we're ready and waits; the house loads for
+    // both once both are ready (NetworkRoleSelect). Offline: loads the house straight away on this headset.
     public void StartGame()
     {
         var session = GameSession.Instance;
@@ -49,7 +49,27 @@ public class MenuController : MonoBehaviour
             return;
         }
         Debug.Log($"[MenuController] StartGame: Role = {session.SelectedRole}, Weapon = {session.SelectedWeapon}");
+
+        var online = NetworkRoleSelect.Instance;
+        if (online != null && online.IsReady)
+        {
+            online.RequestReady(session.SelectedRole, session.SelectedWeapon);
+            HideAllPanels();
+            FloatingMessage.Show(session.SelectedRole == PlayerRole.Prisoner
+                ? "Waiting for Granny\nto pick her weapon..."
+                : "Waiting for the Prisoner...", Color.white);
+            return;
+        }
         OfflineGameLauncher.Launch(gameSceneName, session.SelectedRole);
+    }
+
+    private void HideAllPanels()
+    {
+        SetActive(homePanel, false);
+        SetActive(roleSelectPanel, false);
+        SetActive(grannyLoadoutPanel, false);
+        SetActive(prisonerBriefPanel, false);
+        SetActive(grannyTutorialPanel, false);
     }
 
     private void ShowOnly(GameObject panel)

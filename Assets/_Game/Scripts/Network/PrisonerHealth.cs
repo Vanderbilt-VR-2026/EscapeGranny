@@ -79,7 +79,7 @@ public class PrisonerHealth : NetworkBehaviour
         if (IsDead && !roundEnding)
         {
             roundEnding = true;
-            ShowMessage("GRANNY WINS");
+            FloatingMessage.Show("GRANNY WINS", Color.red);
             StartCoroutine(EndRound());
         }
     }
@@ -101,24 +101,5 @@ public class PrisonerHealth : NetworkBehaviour
         var lobby = FusionPlayerSpawnerAndLobbyController.Instance;
         if (Runner != null && Runner.IsSharedModeMasterClient && lobby != null)
             Runner.LoadScene(SceneRef.FromIndex(lobby.LobbySceneBuildIndex), LoadSceneMode.Single);
-    }
-
-    // Big red text floating in front of this headset's camera. Built in code so there's nothing to set up.
-    private static void ShowMessage(string text)
-    {
-        var cam = Camera.main;
-        if (cam == null) return;
-        var go = new GameObject("Round Over Message");
-        go.transform.SetParent(cam.transform, false);
-        go.transform.localPosition = new Vector3(0f, 0f, 1.5f);
-        var mesh = go.AddComponent<TextMesh>();
-        var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        mesh.font = font;
-        go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
-        mesh.text = text;
-        mesh.fontSize = 100;
-        mesh.characterSize = 0.01f;
-        mesh.anchor = TextAnchor.MiddleCenter;
-        mesh.color = Color.red;
     }
 }
