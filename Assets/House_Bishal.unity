@@ -45206,6 +45206,8 @@ GameObject:
   - component: {fileID: 569202387}
   - component: {fileID: 569202386}
   - component: {fileID: 569202385}
+  - component: {fileID: 569202390}
+  - component: {fileID: 569202389}
   m_Layer: 0
   m_Name: Knife_Root
   m_TagString: Untagged
@@ -45542,6 +45544,34 @@ MonoBehaviour:
   - {fileID: 569202387}
   - {fileID: 569202385}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &569202389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 569202379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04d5ecca4bc90de40b2a37c5f5971d24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponCarrySpeed
+  speedMultiplier: 1.15
+--- !u!114 &569202390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 569202379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e71bb5b3ebf56a4dbd57f54e373d14b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeWeapon
+  damage: 1
+  minSwingSpeed: 1.5
+  cooldown: 0.4
 --- !u!1001 &570707233
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -93175,7 +93205,10 @@ MonoBehaviour:
   bulletPrefab: {fileID: 2456636326588780232, guid: ffe9e20b57b504ec88e88becdd4b89cd, type: 3}
   muzzleFlashPrefab: {fileID: 7117361193305293158, guid: 70c6bb87d32e64b839d5c728c776cbb0, type: 3}
   bulletSpeed: 25
-  fireCooldown: 0.2
+  fireCooldown: 1
+  ammo: 3
+  damage: 1
+  emptySound: {fileID: 0}
   shotSound: {fileID: 0}
   shotVolume: 1
   shotHearingDistance: 40
@@ -93399,7 +93432,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0a1302d0d134fa8a2a5b3bf4aec3c20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Transformers.XRGeneralGrabTransformer
-  m_PermittedDisplacementAxes: 7
+  m_PermittedDisplacementAxes: -1
   m_ConstrainedAxisDisplacementMode: 1
   m_TwoHandedRotationMode: 1
   m_AllowOneHandedScaling: 1
@@ -134830,6 +134863,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8691920687039075649, guid: 300d8476ae2d849ac80bd638a751d6df, type: 3}
+      propertyPath: respawnDelay
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8691920687039075649, guid: 300d8476ae2d849ac80bd638a751d6df, type: 3}
       propertyPath: armWithTriggerFallback
       value: 1
       objectReference: {fileID: 0}
@@ -172367,6 +172404,8 @@ GameObject:
   - component: {fileID: 2081110325}
   - component: {fileID: 2081110324}
   - component: {fileID: 2081110323}
+  - component: {fileID: 2081110328}
+  - component: {fileID: 2081110327}
   m_Layer: 0
   m_Name: Axe_Root
   m_TagString: Untagged
@@ -172703,6 +172742,34 @@ MonoBehaviour:
   - {fileID: 2081110325}
   - {fileID: 2081110323}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &2081110327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2081110317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04d5ecca4bc90de40b2a37c5f5971d24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponCarrySpeed
+  speedMultiplier: 0.85
+--- !u!114 &2081110328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2081110317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e71bb5b3ebf56a4dbd57f54e373d14b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MeleeWeapon
+  damage: 2
+  minSwingSpeed: 2.5
+  cooldown: 1.5
 --- !u!43 &2081131442
 Mesh:
   m_ObjectHideFlags: 0

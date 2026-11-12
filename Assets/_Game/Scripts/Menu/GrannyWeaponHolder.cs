@@ -30,6 +30,17 @@ public class GrannyWeaponHolder : MonoBehaviour
 
     private XRBaseInputInteractor hand;
 
+    /// <summary>
+    /// Switches Granny's weapon on without putting it in a hand. Used on the Prisoner's headset in a
+    /// networked game, so the Prisoner sees the weapon Granny is holding.
+    /// </summary>
+    public static void Show(WeaponType weapon)
+    {
+        if (!WeaponObjectNames.TryGetValue(weapon, out var objectName)) return;
+        var weaponObject = FindInScene(objectName);
+        if (weaponObject != null) weaponObject.SetActive(true);
+    }
+
     /// <summary>Puts the weapon in the right hand. Returns false (and logs why) if it couldn't.</summary>
     public static bool Equip(WeaponType weapon)
     {

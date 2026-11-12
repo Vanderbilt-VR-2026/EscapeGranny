@@ -27,6 +27,8 @@ public class NetworkAvatarBody : NetworkBehaviour
     [SerializeField, Min(0f)] private float grannyHeight = 1.65f;
     [Tooltip("The Prisoner's height in the game (m). 0 = keep the file's size.")]
     [SerializeField, Min(0f)] private float prisonerHeight = 1.75f;
+    [Tooltip("Granny's walk speed compared to the Prisoner's (the game rules say 0.75).")]
+    [SerializeField, Range(0.3f, 1.5f)] private float grannySpeed = 0.75f;
     [Tooltip("How far down from the head to look for the floor (m).")]
     [SerializeField, Min(1f)] private float floorSearchDistance = 4f;
 
@@ -34,21 +36,35 @@ public class NetworkAvatarBody : NetworkBehaviour
     [Networked, OnChangedRender(nameof(ApplyRole))]
     public PlayerRole Role { get; private set; }
 
+    // Point on the floor under this player's head, updated every frame. PrisonerHealth puts the hitbox here.
+    public Vector3 FeetPosition { get; private set; }
+
     private GameObject activeBody;
     private float pivotAboveFeet; // the model's pivot can be at its feet or its middle
     private readonly RaycastHit[] floorHits = new RaycastHit[8];
     // Renderers kept switched off: the dummy shapes everywhere, plus our own body on our own headset.
-    // Re-checked every frame because PlayerHideState switches all renderers back on when hiding ends.
+    // Re-checked every frame because PlayerHideState switches all renderers back on (see LateUpdate).
     private readonly System.Collections.Generic.List<Renderer> keepHidden = new System.Collections.Generic.List<Renderer>();
 
     public override void Spawned()
     {
-        if (HasStateAuthority) Role = PickRole();
+        if (HasStateAuthority)
+        {
+            Role = PickRole();
+            PlayerSpeed.ResetAll(); // new round: nothing carried over from the last one
+        }
         ApplyRole();
     }
 
     private PlayerRole PickRole()
     {
+        // Networked start menu: the role this player claimed there.
+        var select = NetworkRoleSelect.Instance;
+        if (select != null && select.IsReady)
+        {
+            var claimed = select.RoleOf(Runner.LocalPlayer);
+            if (claimed != PlayerRole.None) return claimed;
+        }
         if (GameSession.Instance != null && GameSession.Instance.SelectedRole != PlayerRole.None)
             return GameSession.Instance.SelectedRole;
         return Runner.IsSharedModeMasterClient ? PlayerRole.Granny : PlayerRole.Prisoner;
@@ -74,6 +90,8 @@ public class NetworkAvatarBody : NetworkBehaviour
         foreach (var part in dummyParts)
             if (part != null) keepHidden.AddRange(part.GetComponentsInChildren<Renderer>(true));
 
+        if (HasStateAuthority) PlayerSpeed.SetRole(Role == PlayerRole.Granny ? grannySpeed : 1f);
+
         // On our own headset the model would block the camera, so only the other player sees it.
         if (HasStateAuthority) keepHidden.AddRange(activeBody.GetComponentsInChildren<Renderer>(true));
 
@@ -85,11 +103,19 @@ public class NetworkAvatarBody : NetworkBehaviour
     public override void Render()
     {
         if (activeBody == null || head == null) return;
-        foreach (var r in keepHidden) if (r != null && r.enabled) r.enabled = false;
 
         var body = activeBody.transform;
-        body.position = new Vector3(head.position.x, FloorBelowHead() + pivotAboveFeet, head.position.z);
+        FeetPosition = new Vector3(head.position.x, FloorBelowHead(), head.position.z);
+        body.position = FeetPosition + Vector3.up * pivotAboveFeet;
         body.rotation = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
+    }
+
+    // PlayerHideState switches every renderer under Avatar Visuals back on each frame (in Render), so
+    // hide ours again in LateUpdate, which always runs after Fusion's Render. Only ever switches off,
+    // so hiding a Prisoner from the other player still works.
+    private void LateUpdate()
+    {
+        foreach (var r in keepHidden) if (r != null && r.enabled) r.enabled = false;
     }
 
     // Height of the nearest floor under the head. Starts a little above the head, because without a
