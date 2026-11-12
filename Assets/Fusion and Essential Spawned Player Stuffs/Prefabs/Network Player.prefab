@@ -686,11 +686,8 @@ GameObject:
   - component: {fileID: 1629496386487407874}
   - component: {fileID: 7784538375605908676}
   - component: {fileID: 3998559762632711205}
-<<<<<<< Updated upstream
   - component: {fileID: 3600412839761921956}
-=======
   - component: {fileID: 5093709567608262171}
->>>>>>> Stashed changes
   m_Layer: 0
   m_Name: Network Player
   m_TagString: Untagged
@@ -812,11 +809,8 @@ MonoBehaviour:
   - {fileID: 1629496386487407874}
   - {fileID: 7784538375605908676}
   - {fileID: 3998559762632711205}
-<<<<<<< Updated upstream
   - {fileID: 3600412839761921956}
-=======
   - {fileID: 5093709567608262171}
->>>>>>> Stashed changes
   - {fileID: 2470653021265241310}
   - {fileID: 2077464846767201479}
   - {fileID: 6406758778535878969}
@@ -920,11 +914,7 @@ MonoBehaviour:
   _IsHidden:
     RawValue: 0
   visualRoot: {fileID: 971316409013117624}
-<<<<<<< Updated upstream
 --- !u!114 &3600412839761921956
-=======
---- !u!114 &5093709567608262171
->>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -933,7 +923,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7701784339999434686}
   m_Enabled: 1
   m_EditorHideFlags: 0
-<<<<<<< Updated upstream
   m_Script: {fileID: 11500000, guid: 9f43d264ab454db4d9d23e21ee5c4211, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PrisonerHealth
@@ -945,11 +934,18 @@ MonoBehaviour:
   bloodMaterial: {fileID: 2100000, guid: 0dd36e1e8a325d941bdf3d1a98686b5b, type: 2}
   _LastHitPoint: {x: 0, y: 0, z: 0}
   _Damage: 0
-=======
+--- !u!114 &5093709567608262171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7701784339999434686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e29a2395646d69a44971cc9371a71f68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalPlayerRig
->>>>>>> Stashed changes
 --- !u!1 &7858100408922421796
 GameObject:
   m_ObjectHideFlags: 0
