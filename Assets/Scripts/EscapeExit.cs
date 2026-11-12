@@ -3,7 +3,8 @@ using Unity.XR.CoreUtils;
 
 /// <summary>
 /// Put on an empty object OUTSIDE the door with a Box Collider set to Is Trigger.
-/// When the player walks into it (after the door is open) the congratulations panel appears in front of them.
+/// When the player walks into it (after the door is open) the congratulations panel appears in front of them,
+/// and the round timer at the top of their view stops and disappears.
 /// </summary>
 [RequireComponent(typeof(Collider))]
 public class EscapeExit : MonoBehaviour
@@ -37,6 +38,8 @@ public class EscapeExit : MonoBehaviour
     public void Show()
     {
         shown = true;
+        // The round is over: take the countdown off the player's view.
+        if (RoundTimer.Instance != null) RoundTimer.Instance.Hide();
         if (successSound != null) successSound.Play();
         if (congratsPanel == null) return;
 

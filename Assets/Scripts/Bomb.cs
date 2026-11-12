@@ -13,6 +13,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 /// into the hand instead of a new local copy, so the other player sees it too.
 /// Damage: the Prisoner within Kill Radius takes Close Damage (2 = dead), further out but within
 /// Radius takes Far Damage (1 = injured). Respawn Delay is the bomb's cooldown.
+/// Sounds: pin click, throw whoosh and explosion, heard by both players. Leave the clips empty to use
+/// the placeholders from Tools > Escape Granny > Generate Weapon Sounds.
 /// </summary>
 [RequireComponent(typeof(XRGrabInteractable), typeof(Rigidbody))]
 public class Bomb : MonoBehaviour
@@ -36,6 +38,18 @@ public class Bomb : MonoBehaviour
     [SerializeField, Min(0)] int farDamage = 1;
     [SerializeField] GameObject explosionPrefab;
 
+    [Header("Sounds (empty = use Resources/WeaponSounds/BombPin, BombThrow, BombExplosion)")]
+    [SerializeField] AudioClip pinSound;
+    [SerializeField] AudioClip throwSound;
+    [SerializeField] AudioClip explosionSound;
+    [SerializeField, Range(0f, 1f)] float pinVolume = 0.8f;
+    [SerializeField, Range(0f, 1f)] float throwVolume = 0.7f;
+    [SerializeField, Range(0f, 1f)] float explosionVolume = 1f;
+    [Tooltip("Pin and throw: can't be heard beyond this many metres.")]
+    [SerializeField] float handSoundHearingDistance = 10f;
+    [Tooltip("Explosion: can't be heard beyond this many metres. The house is 18 x 14 m.")]
+    [SerializeField] float explosionHearingDistance = 40f;
+
     [Header("Respawn")]
     [SerializeField] GameObject bombPrefab;
     [SerializeField] float respawnDelay = 0.75f;
@@ -44,6 +58,7 @@ public class Bomb : MonoBehaviour
     XRGrabInteractable grab;
     Rigidbody rb;
     NetworkBomb networkBomb;
+    AudioSource throwAudio;  // the whoosh in flight, kept so the explosion can cut it off
     IXRSelectInteractor lastHolder;
     Vector3 pinRestLocalPos;
     Quaternion pinRestLocalRot;
@@ -62,6 +77,12 @@ public class Bomb : MonoBehaviour
         grab = GetComponent<XRGrabInteractable>();
         rb = GetComponent<Rigidbody>();
         networkBomb = GetComponent<NetworkBomb>();
+
+        // Placeholder sounds from Tools > Escape Granny > Generate Weapon Sounds, if none are dragged in.
+        if (pinSound == null) pinSound = Resources.Load<AudioClip>("WeaponSounds/BombPin");
+        if (throwSound == null) throwSound = Resources.Load<AudioClip>("WeaponSounds/BombThrow");
+        if (explosionSound == null) explosionSound = Resources.Load<AudioClip>("WeaponSounds/BombExplosion");
+        DropSound.Ensure(gameObject, "DropHeavy");
 
         if (pin != null)
         {
@@ -121,7 +142,19 @@ public class Bomb : MonoBehaviour
             fuseStarted = true;
             Debug.Log("Bomb thrown, fuse started");
             Invoke(nameof(Explode), fuseTime);
+
+            // Online: tell both players, so the other side hears the throw too.
+            if (Networked) networkBomb.RequestThrown();
+            else ApplyThrown();
         }
+    }
+
+    // Runs on every headset: the whoosh of the bomb leaving the hand.
+    public void ApplyThrown()
+    {
+        // Follows the bomb, so the whoosh flies with it. OneShotSound applies the distance and floor rules.
+        throwAudio = OneShotSound.PlayAt(throwSound, transform.position, throwVolume, handSoundHearingDistance,
+                                         1f, 0f, 1f, transform);
     }
 
     void OnActivated(ActivateEventArgs args)
@@ -146,6 +179,7 @@ public class Bomb : MonoBehaviour
         armed = true;
         pinRequested = true;
         Debug.Log("Pin pulled, bomb armed");
+        OneShotSound.PlayAt(pinSound, transform.position, pinVolume, handSoundHearingDistance, 1f, 0f, 1f, transform);
 
         if (pin != null)
         {
@@ -219,6 +253,10 @@ public class Bomb : MonoBehaviour
 
         if (explosionPrefab != null)
             Instantiate(explosionPrefab, pos, Quaternion.identity);
+
+        // On its own object, because this bomb is hidden now and (offline) destroyed soon after.
+        if (throwAudio != null) Destroy(throwAudio.gameObject); // cut off a whoosh that's still playing
+        OneShotSound.PlayAt(explosionSound, pos, explosionVolume, explosionHearingDistance, 3f, 0.05f);
 
         Debug.Log("Bomb exploded");
 

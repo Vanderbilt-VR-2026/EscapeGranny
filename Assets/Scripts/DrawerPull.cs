@@ -6,6 +6,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;   // XR Interaction Toolki
 
 // Put this on the DRAWER object, the same object that has the Collider and XR Simple Interactable.
 // The drawer follows the controller while you hold the trigger and slides back along one axis only.
+// Sounds (slide on open, knock on close) are added automatically: see OpenCloseSound.
 [RequireComponent(typeof(XRSimpleInteractable))]
 public class DrawerPull : MonoBehaviour
 {
@@ -20,10 +21,17 @@ public class DrawerPull : MonoBehaviour
     private IXRSelectInteractor grabbingInteractor;
     private float grabOffset;
     private float currentSlide;
+    private OpenCloseSound sound;
+
+    // Counts as "open" once pulled this far (m), and "shut" again within the second distance.
+    private const float OpenDistance = 0.03f;
+    private const float ShutDistance = 0.003f;
 
     private void Awake()
     {
         interactable = GetComponent<XRSimpleInteractable>();
+        // Wooden slide when it's pulled open, a knock when it's pushed shut (see OpenCloseSound).
+        sound = OpenCloseSound.Ensure(gameObject, OpenCloseSound.Size.Drawer);
         parent = transform.parent;
         axis = slideAxis.normalized;
         closedLocalPosition = transform.localPosition;
@@ -65,6 +73,8 @@ public class DrawerPull : MonoBehaviour
         }
 
         transform.localPosition = closedLocalPosition + axis * currentSlide;
+
+        sound.Tick(currentSlide > OpenDistance, currentSlide <= ShutDistance);
     }
 
     // Distance the controller has moved along the slide axis, measured in the parent's space.
