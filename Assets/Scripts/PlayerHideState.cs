@@ -4,10 +4,8 @@ using UnityEngine;
 
 public class PlayerHideState : NetworkBehaviour
 {
-    // The local player's instance on this client.
     public static PlayerHideState LocalPlayer { get; private set; }
 
-    // This value is synchronized through Photon Fusion.
     [Networked]
     public NetworkBool IsHidden { get; set; }
 
@@ -17,53 +15,70 @@ public class PlayerHideState : NetworkBehaviour
 
     private Renderer[] avatarRenderers;
 
+    private bool hasLoggedVisibility;
+    private bool lastLoggedHidden;
+
     public override void Spawned()
     {
-        // Cache all renderers belonging to the avatar.
         if (visualRoot != null)
         {
             avatarRenderers =
                 visualRoot.GetComponentsInChildren<Renderer>(true);
+
+            Debug.Log(
+                $"[HideState] Found {avatarRenderers.Length} renderers."
+            );
         }
         else
         {
             Debug.LogError(
-                "PlayerHideState: Assign Visual Root in Inspector."
+                "[HideState] Assign Visual Root in Inspector."
             );
         }
 
-        // Identify this client's own player.
-        if (Object.HasInputAuthority)
+        // In Shared Mode, the owning client has State Authority.
+        if (HasStateAuthority)
         {
             LocalPlayer = this;
+            Debug.Log("[HideState] This is my locally owned avatar.");
         }
 
         UpdateVisibility();
     }
 
-    // Called by Fusion when rendering networked objects.
     public override void Render()
     {
         UpdateVisibility();
     }
 
-    // Called when the player selects the Hide prompt.
     public void RequestHide()
     {
-        RPC_SetHidden(true);
+        if (!HasStateAuthority)
+        {
+            Debug.LogError(
+                "[HideState] Cannot hide: this client has no State Authority."
+            );
+            return;
+        }
+
+        IsHidden = true;
+
+        Debug.Log("[HideState] Hide requested. IsHidden = true.");
     }
 
-    // Called when the player exits the hiding spot.
     public void RequestUnhide()
     {
-        RPC_SetHidden(false);
-    }
+        if (!HasStateAuthority)
+        {
+            Debug.LogError(
+                "[HideState] Cannot unhide: this client has no State Authority."
+            );
+            return;
+        }
 
-    // The request goes to the State Authority.
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    private void RPC_SetHidden(bool hidden)
-    {
-        IsHidden = hidden;
+        IsHidden = false;
+
+        Debug.Log("[HideState] Unhide requested. IsHidden = false.");
     }
 
     private void UpdateVisibility()
@@ -71,10 +86,10 @@ public class PlayerHideState : NetworkBehaviour
         if (avatarRenderers == null)
             return;
 
-        // Don't hide your own first-person avatar.
-        // Other clients hide this avatar when IsHidden is true.
+        // Keep the owner's own avatar visible.
+        // Hide it on every other client when IsHidden is true.
         bool shouldBeVisible =
-            !IsHidden || Object.HasInputAuthority;
+            !IsHidden || HasStateAuthority;
 
         foreach (Renderer avatarRenderer in avatarRenderers)
         {
@@ -83,9 +98,24 @@ public class PlayerHideState : NetworkBehaviour
                 avatarRenderer.enabled = shouldBeVisible;
             }
         }
+
+        // Log only when the hidden state changes.
+        if (!hasLoggedVisibility || lastLoggedHidden != IsHidden)
+        {
+            Debug.Log(
+                $"[HideState] IsHidden={IsHidden}, " +
+                $"HasStateAuthority={HasStateAuthority}, " +
+                $"Visible={shouldBeVisible}"
+            );
+
+            lastLoggedHidden = IsHidden;
+            hasLoggedVisibility = true;
+        }
     }
 
-    public override void Despawned(NetworkRunner runner, bool hasState)
+    public override void Despawned(
+        NetworkRunner runner,
+        bool hasState)
     {
         if (LocalPlayer == this)
         {
