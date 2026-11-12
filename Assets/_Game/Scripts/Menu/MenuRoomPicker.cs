@@ -1,8 +1,8 @@
 // MenuRoomPicker.cs
 //
 // Starts the main menu in Granny's house, with the menu floating in front of the player.
-// By default it's always the same open spot (the big living room, facing the front door), because in
-// small random rooms the menu could end up half through a wall. Untick Use Fixed Spot to go back to a
+// By default it's always the same spot: the living room, facing the east wall that the menu covers
+// (MainMenuSceneBuilder sets the spot to match the wall). Untick Use Fixed Spot to go back to a
 // random room each time.
 //
 // The fixed spot is where the player's HEAD ends up, not the rig: the headset can be a metre or two
@@ -26,10 +26,10 @@ public class MenuRoomPicker : MonoBehaviour
     [SerializeField] private Transform rig;
     [Tooltip("Always start at the spot below instead of a random room.")]
     [SerializeField] private bool useFixedSpot = true;
-    [Tooltip("Where the player stands (house coordinates, m). Default: living room, clear of the stairs.")]
-    [SerializeField] private Vector3 fixedPosition = new Vector3(14.5f, 0f, 4f);
-    [Tooltip("Which way the player faces (degrees, 0 = north toward the front door, ~10 m of open floor).")]
-    [SerializeField] private float fixedYaw = 0f;
+    [Tooltip("Where the player stands (house coordinates, m). Default: living room, 4.5 m from the menu wall.")]
+    [SerializeField] private Vector3 fixedPosition = new Vector3(13.4f, 0f, 9.85f);
+    [Tooltip("Which way the player faces (degrees, 0 = north, 90 = east toward the menu wall).")]
+    [SerializeField] private float fixedYaw = 90f;
     [Tooltip("Snap anyway after this many seconds if the headset never reports tracking (e.g. Editor).")]
     [SerializeField, Min(0f)] private float maxWaitSeconds = 2.5f;
     [Tooltip("Marker groups to pick a room from (names HouseBuilder uses).")]
