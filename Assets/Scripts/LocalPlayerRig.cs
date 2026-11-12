@@ -15,7 +15,7 @@ public class LocalPlayerRig : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (!HasInputAuthority)
+        if (!HasStateAuthority)
             return;
 
         hideState = GetComponent<PlayerHideState>();
@@ -50,7 +50,7 @@ public class LocalPlayerRig : NetworkBehaviour
 
     private void Update()
     {
-        if (!HasInputAuthority || rig == null || currentSpot == null)
+        if (!HasStateAuthority || rig == null || currentSpot == null)
             return;
 
         if (rig.exitAction == null || rig.exitAction.action == null)
@@ -89,9 +89,16 @@ public class LocalPlayerRig : NetworkBehaviour
         MoveTo(hidePoint);
 
         // Synchronize invisibility through Photon Fusion.
+        Debug.Log("[Hide] EnterHiding reached.");
+
         if (hideState != null)
         {
+            Debug.Log("[Hide] Calling RequestHide().");
             hideState.RequestHide();
+        }
+        else
+        {
+            Debug.LogError("[Hide] hideState is NULL!");
         }
 
         StartCoroutine(LogAfterMove("hide"));
