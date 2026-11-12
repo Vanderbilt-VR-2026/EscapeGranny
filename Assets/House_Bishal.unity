@@ -39114,6 +39114,14 @@ MonoBehaviour:
   chopSpeed: 2
   chopLength: 0.04
   maxStrokes: 60
+  surfaceHitSound: {fileID: 0}
+  playerHitSound: {fileID: 0}
+  minHitSpeed: 0.8
+  fullVolumeHitSpeed: 4
+  hitVolume: 0.9
+  hitSoundCooldown: 0.15
+  hitPitch: 1
+  hitHearingDistance: 15
   debugContacts: 0
 --- !u!65 &569202381
 BoxCollider:
@@ -80012,6 +80020,10 @@ MonoBehaviour:
   muzzleFlashPrefab: {fileID: 7117361193305293158, guid: 70c6bb87d32e64b839d5c728c776cbb0, type: 3}
   bulletSpeed: 25
   fireCooldown: 0.2
+  shotSound: {fileID: 0}
+  shotVolume: 1
+  shotHearingDistance: 40
+  shotPitchVariation: 0.05
 --- !u!65 &1146431760
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -95057,63 +95069,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1337445359}
   m_Mesh: {fileID: 1815418836}
---- !u!1001 &1337754208
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 3.62513
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 5.73579
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187027, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6598815579406187037, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
-      propertyPath: m_Name
-      value: XR Device Simulator
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
 --- !u!1001 &1339113196
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -152458,6 +152413,14 @@ MonoBehaviour:
   chopSpeed: 2
   chopLength: 0.04
   maxStrokes: 60
+  surfaceHitSound: {fileID: 0}
+  playerHitSound: {fileID: 0}
+  minHitSpeed: 0.8
+  fullVolumeHitSpeed: 4
+  hitVolume: 0.9
+  hitSoundCooldown: 0.15
+  hitPitch: 1
+  hitHearingDistance: 15
   debugContacts: 0
 --- !u!65 &2081110319
 BoxCollider:
@@ -157164,7 +157127,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 203844589}
   - {fileID: 694921268}
-  - {fileID: 1337754208}
   - {fileID: 1866676500}
   - {fileID: 980137044}
   - {fileID: 934923582}
