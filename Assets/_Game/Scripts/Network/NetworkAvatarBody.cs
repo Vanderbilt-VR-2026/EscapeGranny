@@ -39,7 +39,11 @@ public class NetworkAvatarBody : NetworkBehaviour
     // Point on the floor under this player's head, updated every frame. PrisonerHealth puts the hitbox here.
     public Vector3 FeetPosition { get; private set; }
 
+    [Tooltip("Seconds the body takes to fall to the floor when the Prisoner dies.")]
+    [SerializeField, Min(0.1f)] private float fallSeconds = 0.8f;
+
     private GameObject activeBody;
+    private bool fallen; // dead: the body lies where it fell instead of following the head
     private float pivotAboveFeet; // the model's pivot can be at its feet or its middle
     private readonly RaycastHit[] floorHits = new RaycastHit[8];
     // Renderers kept switched off: the dummy shapes everywhere, plus our own body on our own headset.
@@ -102,12 +106,40 @@ public class NetworkAvatarBody : NetworkBehaviour
     // head faces (left/right only, so looking down doesn't tip the body over).
     public override void Render()
     {
-        if (activeBody == null || head == null) return;
+        if (activeBody == null || head == null || fallen) return;
 
         var body = activeBody.transform;
         FeetPosition = new Vector3(head.position.x, FloorBelowHead(), head.position.z);
         body.position = FeetPosition + Vector3.up * pivotAboveFeet;
         body.rotation = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
+    }
+
+    // Death (PrisonerHealth calls this on both headsets): the body stops following the head and tips
+    // over backwards around its feet, speeding up like a real fall, then stays on the floor.
+    public void FallOver()
+    {
+        if (fallen || activeBody == null) return;
+        fallen = true;
+        StartCoroutine(FallRoutine());
+    }
+
+    private System.Collections.IEnumerator FallRoutine()
+    {
+        var body = activeBody.transform;
+        var animator = activeBody.GetComponentInChildren<Animator>();
+        if (animator != null) animator.enabled = false; // freeze the idle pose so it doesn't fight the fall
+
+        Vector3 feet = FeetPosition;
+        Vector3 axis = body.right; // falling backwards = rotating around the body's left-right line
+        float turned = 0f;
+        for (float t = 0f; t < fallSeconds; t += Time.deltaTime)
+        {
+            float target = 90f * Mathf.Pow(t / fallSeconds, 2f); // slow start, fast finish
+            body.RotateAround(feet, axis, -(target - turned));
+            turned = target;
+            yield return null;
+        }
+        body.RotateAround(feet, axis, -(90f - turned));
     }
 
     // PlayerHideState switches every renderer under Avatar Visuals back on each frame (in Render), so

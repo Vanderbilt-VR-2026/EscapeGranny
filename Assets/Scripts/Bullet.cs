@@ -38,7 +38,7 @@ public class Bullet : MonoBehaviour
         {
             if (sweepHits[i].collider.GetComponent<PlayerHitbox>() == null) continue;
             hit = true;
-            if (Damage > 0) PlayerHitbox.TryHit(sweepHits[i].collider, Damage);
+            if (Damage > 0) PlayerHitbox.TryHit(sweepHits[i].collider, Damage, sweepHits[i].point);
             if (impactPrefab != null) Instantiate(impactPrefab, sweepHits[i].point, Quaternion.identity);
             Destroy(gameObject);
             return;

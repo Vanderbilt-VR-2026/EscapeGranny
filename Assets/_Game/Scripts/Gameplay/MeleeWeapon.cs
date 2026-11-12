@@ -41,7 +41,7 @@ public class MeleeWeapon : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (!grab.isSelected || speed < minSwingSpeed || Time.time - lastHitTime < cooldown) return;
-        if (PlayerHitbox.TryHit(other, damage))
+        if (PlayerHitbox.TryHit(other, damage, other.ClosestPoint(transform.position)))
         {
             lastHitTime = Time.time;
             Debug.Log($"[MeleeWeapon] {name} hit the Prisoner at {speed:0.0} m/s");
