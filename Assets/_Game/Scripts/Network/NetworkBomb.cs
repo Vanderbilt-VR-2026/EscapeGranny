@@ -2,7 +2,7 @@ using Fusion;
 using UnityEngine;
 
 /// <summary>
-/// Lets the other player see the bomb's pin come out, the explosion, and the bomb coming back.
+/// Lets the other player see and hear the bomb's pin come out, the throw, the explosion, and the bomb coming back.
 /// The throw itself is synced by XRGrabNetworkInteractable + NetworkTransform. No damage yet.
 /// Setup: put this on Bomb_Root next to Bomb and XRGrabNetworkInteractable.
 /// Without a Fusion runner, Bomb ignores it and works locally as before.
@@ -18,6 +18,7 @@ public class NetworkBomb : NetworkBehaviour
     private void Awake() => bomb = GetComponent<Bomb>();
 
     public void RequestPullPin() => RpcPullPin();
+    public void RequestThrown() => RpcThrown();
     public void RequestExplode(Vector3 position) => RpcExplode(position);
     public void RequestReset() => RpcReset();
 
@@ -29,9 +30,13 @@ public class NetworkBomb : NetworkBehaviour
         transform.SetPositionAndRotation(position, rotation);
     }
 
-    // All three run on both headsets, including the one that sent them.
+    // All of these run on both headsets, including the one that sent them.
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RpcPullPin() => bomb.ApplyPinPulled();
+
+    // Only the throw sound; the flight itself is synced by NetworkTransform.
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RpcThrown() => bomb.ApplyThrown();
 
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RpcExplode(Vector3 position) => bomb.ApplyExplosion(position);

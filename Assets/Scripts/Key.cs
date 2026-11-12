@@ -51,6 +51,9 @@ public class Key : MonoBehaviour
         grab = GetComponent<XRGrabInteractable>();
         colliders = GetComponentsInChildren<Collider>(true);
 
+        // Light metal clink when the key is dropped. Dropping the key is meant to be heard (it gives the Prisoner away).
+        if (GetComponent<Rigidbody>() != null) DropSound.Ensure(gameObject, "DropKey");
+
         if (tip == null) tip = transform.Find("KeyTip");
 
         if (visual == null)

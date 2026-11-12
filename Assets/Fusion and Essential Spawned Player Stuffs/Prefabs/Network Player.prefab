@@ -501,6 +501,7 @@ GameObject:
   - component: {fileID: 5187777552851708215}
   - component: {fileID: 2766816228994053676}
   - component: {fileID: 2470653021265241310}
+  - component: {fileID: 5252453093268153411}
   m_Layer: 0
   m_Name: Head
   m_TagString: Untagged
@@ -643,6 +644,34 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!114 &5252453093268153411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6655800574103219481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ebd87d5112624503a80cbcb8c7ba4cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Footsteps
+  tracked: {fileID: 0}
+  clips: []
+  strideLength: 0.6
+  minSpeed: 0.3
+  fullVolumeSpeed: 2
+  maxVolume: 0.8
+  minVolume: 0.25
+  pitchVariation: 0.1
+  teleportDistance: 1
+  feetBelowHead: 1.4
+  fullVolumeDistance: 1.5
+  hearingDistance: 12
+  groundFloorY: 0
+  floorHeight: 3
+  fromAboveVolume: 0.4
+  fromAboveMuffleHz: 900
 --- !u!1 &7701784339999434686
 GameObject:
   m_ObjectHideFlags: 0

@@ -6,7 +6,7 @@
 // How to use:
 //   Menu: Tools > Escape Granny > Build Main Menu.
 //   It (re)creates Assets/_Game/Scenes/MainMenu.unity containing:
-//     - XR Origin (XR Rig) from the XRI Starter Assets sample, at (0, 0, 0)
+//     - XR Origin (XR Rig) from the XRI Starter Assets sample, at (0, 0, 0), switched to snap turning
 //     - Granny's house: HouseBuilder's generated shell with its horror lighting (moonlight, fog, one
 //       dim lamp per room), and MenuRoomPicker, which always starts the player in the living room,
 //       facing the menu wall. Plus an invisible safety floor (the rig has gravity).
@@ -123,6 +123,7 @@ public static class MainMenuSceneBuilder
 
         var rig = (GameObject)PrefabUtility.InstantiatePrefab(rigPrefab, scene);
         rig.transform.position = Vector3.zero;
+        UseSnapTurn(rig);
 
         // The house the menu floats in: the same generated shell and horror lighting as the game's
         // house (HouseBuilder), not House_Bishal itself, so the shared game scene is never touched.
@@ -571,6 +572,30 @@ public static class MainMenuSceneBuilder
         var text = CreateText("Label", rt, label, 40);
         Stretch(text.rectTransform);
         return button;
+    }
+
+    // Snap turning (like House_Bishal): the right stick turns you in steps instead of smoothly, which
+    // is easier on VR motion sickness. The starter rig ships with smooth turning on, so switch it over:
+    // enable the Snap Turn Provider, disable the Continuous Turn Provider, and untick "Smooth Turn
+    // Enabled" on the controllers (while it's ticked the right stick sends smooth-turn input, which
+    // nothing would use, and snap-turn input is switched off).
+    static void UseSnapTurn(GameObject rig)
+    {
+        foreach (var snap in rig.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning.SnapTurnProvider>(true))
+            snap.enabled = true;
+        foreach (var smooth in rig.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning.ContinuousTurnProvider>(true))
+            smooth.enabled = false;
+
+        // ControllerInputActionManager lives in the XRI Starter Assets sample, so set it by field name.
+        foreach (var behaviour in rig.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            if (behaviour == null || behaviour.GetType().Name != "ControllerInputActionManager") continue;
+            var so = new SerializedObject(behaviour);
+            var smoothTurn = so.FindProperty("m_SmoothTurnEnabled");
+            if (smoothTurn == null) continue;
+            smoothTurn.boolValue = false;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
     }
 
     static bool AddDeviceSimulator(Scene scene)
