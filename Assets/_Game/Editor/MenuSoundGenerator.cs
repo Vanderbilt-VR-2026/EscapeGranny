@@ -18,7 +18,7 @@ using UnityEngine;
 public static class MenuSoundGenerator
 {
     const string Folder = "Assets/_Game/Audio";
-    const int SampleRate = 22050; // plenty for these sounds, and half the file size of 44.1 kHz
+    internal const int SampleRate = 22050; // plenty for these sounds, and half the file size of 44.1 kHz
 
     public static AudioClip Ambience => LoadOrCreate("MenuAmbience", MakeAmbience);
     public static AudioClip Hover => LoadOrCreate("MenuHover", MakeHover);
@@ -143,7 +143,7 @@ public static class MenuSoundGenerator
 
     static float Sin(float hz, float t) => Mathf.Sin(2f * Mathf.PI * hz * t);
 
-    static float[] Normalize(float[] samples, float peak)
+    internal static float[] Normalize(float[] samples, float peak)
     {
         float max = 0.0001f;
         foreach (float s in samples) max = Mathf.Max(max, Mathf.Abs(s));
@@ -152,7 +152,7 @@ public static class MenuSoundGenerator
     }
 
     // 16-bit mono PCM .wav file.
-    static void WriteWav(string path, float[] samples)
+    internal static void WriteWav(string path, float[] samples)
     {
         using var writer = new BinaryWriter(File.Create(path));
         int dataBytes = samples.Length * 2;

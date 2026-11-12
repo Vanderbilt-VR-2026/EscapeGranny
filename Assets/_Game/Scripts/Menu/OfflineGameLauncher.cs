@@ -2,9 +2,10 @@
 //
 // Single-headset test path: loads the house straight from the main menu, without Photon, and puts
 // the player at a random spawn marker for the role they picked (G1-G3 for Granny, P1-P3 for the
-// Prisoner). Lets you test menu -> house on one Quest, with no second player and no Fusion room.
+// Prisoner). The player's HEAD goes on the marker, not just the rig, so standing off-centre in your
+// play area can't put you inside a wall or under the floor. Lets you test menu -> house on one Quest, with no second player and no Fusion room.
 // If Granny picked a weapon on the loadout screen, it's put straight into her right hand
-// (see GrannyWeaponHolder).
+// (see GrannyWeaponHolder). Both roles get the round countdown at the top of their view (RoundTimer).
 //
 // Not the real multiplayer flow: that starts from the Lobby scene. Networked objects in the house
 // have no runner here, so anything that needs Fusion (e.g. network grabbing) may not work.
@@ -45,37 +46,72 @@ public class OfflineGameLauncher : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        MoveRigToSpawn();
 
-        if (role == PlayerRole.Granny && weapon != WeaponType.None)
-            StartCoroutine(EquipWeaponThenFinish());
-        else
-            Destroy(gameObject);
+        // No Network Player offline, so put footsteps on the headset camera instead.
+        var head = GameObject.Find(RigName + "/Camera Offset/Main Camera");
+        if (head != null) Footsteps.AddTo(head);
+
+        // Both roles get the 5:00 countdown at the top of their view.
+        RoundTimer.StartRound(RoundTimer.DefaultRoundSeconds);
+
+        StartCoroutine(PlaceThenFinish());
     }
 
-    private IEnumerator EquipWeaponThenFinish()
-    {
-        // Give the XR rig's hands a couple of frames to start up after the move.
-        yield return null;
-        yield return null;
+    // Seconds to wait for the headset to report tracking before placing the head anyway (Editor, no headset).
+    private const float MaxTrackingWait = 2.5f;
 
-        GrannyWeaponHolder.Equip(weapon);
-        Destroy(gameObject);
-    }
-
-    private void MoveRigToSpawn()
+    private IEnumerator PlaceThenFinish()
     {
         var rig = GameObject.Find(RigName);
         var spawns = FindSpawns(role == PlayerRole.Granny ? GrannySpawnsGroup : PrisonerSpawnsGroup);
         if (rig == null || spawns.Count == 0)
         {
             Debug.LogWarning($"[OfflineGameLauncher] Couldn't find '{RigName}' or any {role} spawn markers; leaving the player where the scene put them.");
-            return;
+        }
+        else
+        {
+            var spawn = spawns[Random.Range(0, spawns.Count)];
+            // Rough move straight away, so the first frames aren't somewhere random.
+            MoveRig(rig, spawn.position, spawn.rotation);
+
+            // The rig is the centre of the player's real play area, but the player can be standing a
+            // metre or two away from it. Moving only the rig can then leave their head and body
+            // outside the room (e.g. behind the basement wall, stuck under the floor). So once the
+            // headset is tracking, slide the rig so the HEAD is on the spawn marker.
+            var cam = rig.GetComponentInChildren<Camera>();
+            if (cam != null)
+            {
+                int trackedFrames = 0;
+                float waited = 0f;
+                while (trackedFrames < 2 && waited < MaxTrackingWait)
+                {
+                    yield return null;
+                    trackedFrames = HeadsetMenuPlacer.IsHeadsetTracked() ? trackedFrames + 1 : 0;
+                    waited += Time.unscaledDeltaTime;
+                }
+                PutHeadOn(rig, cam.transform, spawn.position, spawn.eulerAngles.y);
+            }
+            Debug.Log($"[OfflineGameLauncher] {role} spawned at {spawn.name}");
         }
 
-        var spawn = spawns[Random.Range(0, spawns.Count)];
-        MoveRig(rig, spawn.position, spawn.rotation);
-        Debug.Log($"[OfflineGameLauncher] {role} spawned at {spawn.name}");
+        // Granny's weapon goes into her hand once she's in place (the hands follow the moved rig).
+        if (role == PlayerRole.Granny && weapon != WeaponType.None)
+        {
+            yield return null;
+            GrannyWeaponHolder.Equip(weapon);
+        }
+        Destroy(gameObject);
+    }
+
+    // Turns the rig around the head so the player faces `yaw`, then slides it sideways so the head is
+    // straight above `spot`. Height isn't touched: the rig keeps standing on the spawn's floor.
+    public static void PutHeadOn(GameObject rig, Transform head, Vector3 spot, float yaw)
+    {
+        var body = rig.GetComponent<CharacterController>();
+        if (body != null) body.enabled = false;
+        rig.transform.RotateAround(head.position, Vector3.up, Mathf.DeltaAngle(head.eulerAngles.y, yaw));
+        rig.transform.position += new Vector3(spot.x - head.position.x, 0f, spot.z - head.position.z);
+        if (body != null) ReEnableBody(body);
     }
 
     // Teleports the XR rig. Also used by MenuRoomPicker.
