@@ -27,12 +27,17 @@ public class NetworkAvatarBody : NetworkBehaviour
     [SerializeField, Min(0f)] private float grannyHeight = 1.65f;
     [Tooltip("The Prisoner's height in the game (m). 0 = keep the file's size.")]
     [SerializeField, Min(0f)] private float prisonerHeight = 1.75f;
+    [Tooltip("Granny's walk speed compared to the Prisoner's (the game rules say 0.75).")]
+    [SerializeField, Range(0.3f, 1.5f)] private float grannySpeed = 0.75f;
     [Tooltip("How far down from the head to look for the floor (m).")]
     [SerializeField, Min(1f)] private float floorSearchDistance = 4f;
 
     // The shared role. Fusion copies it to the other player; OnChangedRender swaps the model when it arrives.
     [Networked, OnChangedRender(nameof(ApplyRole))]
     public PlayerRole Role { get; private set; }
+
+    // Point on the floor under this player's head, updated every frame. PrisonerHealth puts the hitbox here.
+    public Vector3 FeetPosition { get; private set; }
 
     private GameObject activeBody;
     private float pivotAboveFeet; // the model's pivot can be at its feet or its middle
@@ -43,7 +48,11 @@ public class NetworkAvatarBody : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (HasStateAuthority) Role = PickRole();
+        if (HasStateAuthority)
+        {
+            Role = PickRole();
+            PlayerSpeed.ResetAll(); // new round: nothing carried over from the last one
+        }
         ApplyRole();
     }
 
@@ -74,6 +83,8 @@ public class NetworkAvatarBody : NetworkBehaviour
         foreach (var part in dummyParts)
             if (part != null) keepHidden.AddRange(part.GetComponentsInChildren<Renderer>(true));
 
+        if (HasStateAuthority) PlayerSpeed.SetRole(Role == PlayerRole.Granny ? grannySpeed : 1f);
+
         // On our own headset the model would block the camera, so only the other player sees it.
         if (HasStateAuthority) keepHidden.AddRange(activeBody.GetComponentsInChildren<Renderer>(true));
 
@@ -88,7 +99,8 @@ public class NetworkAvatarBody : NetworkBehaviour
         foreach (var r in keepHidden) if (r != null && r.enabled) r.enabled = false;
 
         var body = activeBody.transform;
-        body.position = new Vector3(head.position.x, FloorBelowHead() + pivotAboveFeet, head.position.z);
+        FeetPosition = new Vector3(head.position.x, FloorBelowHead(), head.position.z);
+        body.position = FeetPosition + Vector3.up * pivotAboveFeet;
         body.rotation = Quaternion.Euler(0f, head.eulerAngles.y, 0f);
     }
 

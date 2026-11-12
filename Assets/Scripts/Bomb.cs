@@ -11,6 +11,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 /// bomb appears at the hand that threw it.
 /// For multiplayer, also add NetworkBomb + XRGrabNetworkInteractable: then the same bomb is reset
 /// into the hand instead of a new local copy, so the other player sees it too.
+/// Damage: the Prisoner within Kill Radius takes Close Damage (2 = dead), further out but within
+/// Radius takes Far Damage (1 = injured). Respawn Delay is the bomb's cooldown.
 /// </summary>
 [RequireComponent(typeof(XRGrabInteractable), typeof(Rigidbody))]
 public class Bomb : MonoBehaviour
@@ -28,6 +30,10 @@ public class Bomb : MonoBehaviour
     [SerializeField] float radius = 3f;
     [SerializeField] float force = 300f;
     [SerializeField] float upwardsModifier = 0.5f;
+    [Tooltip("The Prisoner this close takes Close Damage; further out (up to Radius) takes Far Damage.")]
+    [SerializeField] float killRadius = 1.5f;
+    [SerializeField, Min(0)] int closeDamage = 2;
+    [SerializeField, Min(0)] int farDamage = 1;
     [SerializeField] GameObject explosionPrefab;
 
     [Header("Respawn")]
@@ -167,6 +173,9 @@ public class Bomb : MonoBehaviour
     {
         if (exploded) return;
 
+        // Only the thrower's headset gets here, so the damage counts once.
+        DealDamage(transform.position);
+
         // Online: tell both players where it blew up. This headset (the thrower) puts it back afterwards.
         if (Networked)
         {
@@ -177,6 +186,17 @@ public class Bomb : MonoBehaviour
         {
             ApplyExplosion(transform.position);
             StartCoroutine(RespawnRoutine());
+        }
+    }
+
+    void DealDamage(Vector3 pos)
+    {
+        foreach (var hit in Physics.OverlapSphere(pos, radius, ~0, QueryTriggerInteraction.Collide))
+        {
+            if (hit.GetComponent<PlayerHitbox>() == null) continue;
+            float distance = Vector3.Distance(pos, hit.ClosestPoint(pos));
+            int damage = distance <= killRadius ? closeDamage : farDamage;
+            if (damage > 0) PlayerHitbox.TryHit(hit, damage);
         }
     }
 

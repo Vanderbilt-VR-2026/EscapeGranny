@@ -5,6 +5,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 /// <summary>
 /// Put on Pistol_Root. Trigger press (Activate) fires a bullet from the Muzzle
 /// and plays a muzzle flash.
+/// Balance: long range, but only Ammo bullets per round and a slow Fire Cooldown, and the shot is
+/// heard across the house. Each bullet takes Damage hits off the Prisoner.
 /// </summary>
 [RequireComponent(typeof(XRGrabInteractable))]
 public class Gun : MonoBehaviour
@@ -14,6 +16,14 @@ public class Gun : MonoBehaviour
     [SerializeField] GameObject muzzleFlashPrefab;
     [SerializeField] float bulletSpeed = 25f;
     [SerializeField] float fireCooldown = 0.2f;
+
+    [Header("Balance")]
+    [Tooltip("Bullets for the whole round.")]
+    [SerializeField, Min(0)] int ammo = 3;
+    [Tooltip("Hits each bullet takes off the Prisoner (the Prisoner has 2).")]
+    [SerializeField, Min(1)] int damage = 1;
+    [Tooltip("Played when the trigger is pressed with no bullets left.")]
+    [SerializeField] AudioClip emptySound;
 
     XRGrabInteractable grab;
     Collider[] gunColliders;
@@ -35,6 +45,13 @@ public class Gun : MonoBehaviour
         if (Time.time - lastFire < fireCooldown) return;
         lastFire = Time.time;
 
+        if (ammo <= 0)
+        {
+            if (emptySound != null) AudioSource.PlayClipAtPoint(emptySound, transform.position);
+            return;
+        }
+        ammo--;
+
         // Online: tell both players, so the other side sees the shot too.
         if (networkGun && networkGun.IsReady) networkGun.RequestFire();
         else Fire();
@@ -42,7 +59,11 @@ public class Gun : MonoBehaviour
 
     // Right-click the component header in Play mode and choose "Fire" to test without a headset.
     [ContextMenu("Fire")]
-    public void Fire()
+    public void Fire() => Fire(true);
+
+    // Online, both headsets spawn a bullet so both see it; only the shooter's bullet does damage,
+    // otherwise every hit would count twice.
+    public void Fire(bool dealsDamage)
     {
         if (muzzle == null || bulletPrefab == null)
         {
@@ -59,6 +80,9 @@ public class Gun : MonoBehaviour
 
         if (bullet.TryGetComponent<Rigidbody>(out var rb))
             rb.linearVelocity = muzzle.forward * bulletSpeed;
+
+        if (bullet.TryGetComponent<Bullet>(out var shot))
+            shot.Damage = dealsDamage ? damage : 0;
 
         if (muzzleFlashPrefab != null)
         {
