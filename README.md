@@ -40,7 +40,7 @@ See [CLAUDE.md](CLAUDE.md) for the full project guide.
 
 ### Main Menu
 
-Video coming soon.
+[![Main menu video](https://drive.google.com/thumbnail?id=1l48afC_PCcg8go1RJkrWUxZlr8F0GyFe&sz=w800)](https://drive.google.com/file/d/1l48afC_PCcg8go1RJkrWUxZlr8F0GyFe/view?usp=drive_link)
 
 ### Prisoner Hiding
 
@@ -60,8 +60,7 @@ Video coming soon.
 
 ### Keypad Mechanism for the Escape Sequence
 
-Video coming soon.
-
+[![Keypad mechanism video](https://drive.google.com/thumbnail?id=1FTVT8-XnBGKUtfuBaSAIC1MZrk4Wnpdr&sz=w800)](https://drive.google.com/file/d/1FTVT8-XnBGKUtfuBaSAIC1MZrk4Wnpdr/view?usp=drive_link)
 
 ## Next Steps
 
@@ -85,10 +84,11 @@ Main goals for Sprint 5:
 
 | Team Member | Major(s) | Relevant Skills | Responsibilities |
 | --- | --- | --- | --- |
-| Divija Katakam | CS | Backend, Software Engineering | GitHub Manager<br>Asset Manager<br>Networking |
-| Bishal Panthi | CS | Setting up environment, Modelling near & far interactive objects | Communications Director |
+| Divija Katakam | CS | Backend, Software Engineering | GitHub Manager<br>Asset Manager<br> |
+| Bishal Panthi | CS | Setting up environment, Modelling near & far interactive objects | Networking |
 | Julia Zhang | CS | 3D modeling, Rendering | Asset Manager |
 | Isabelle Pham | CS | UI / UX Design<br>Storyboarding<br>Moodboard / Palette | Design Director |
 | Yamilet Pineda | CS | 3D-Modeling, Rendering, Programming | Design Director<br>Asset Manager |
 
 ## Sprint 4 - Meta Quest Build apk File
+https://drive.google.com/drive/folders/1QdCNq7WtCwMw5GTtxHY-8QRp6LtXRMjN?usp=drive_link
