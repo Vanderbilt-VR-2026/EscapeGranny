@@ -2,7 +2,7 @@ using Fusion;
 using UnityEngine;
 
 /// <summary>
-/// Lets the other player see the gun fire (bullet + muzzle flash). No damage yet.
+/// Lets the other player see the gun fire (bullet + muzzle flash).
 /// Setup: put this on Pistol_Root next to Gun and XRGrabNetworkInteractable.
 /// Without a Fusion runner, Gun ignores it and fires locally as before.
 /// </summary>
@@ -18,8 +18,8 @@ public class NetworkGun : NetworkBehaviour
 
     public void RequestFire() => RpcFire();
 
-    // Runs on both headsets (the shooter too). Each one spawns its own bullet and flash,
-    // which is fine while bullets are only visual.
+    // Runs on both headsets (the shooter too). Each one spawns its own bullet and flash; only the
+    // shooter's (who owns the gun while holding it) does damage, so a hit counts once.
     [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RpcFire() => gun.Fire();
+    private void RpcFire() => gun.Fire(Object.HasStateAuthority);
 }

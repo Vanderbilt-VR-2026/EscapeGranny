@@ -9,7 +9,7 @@
 // art, same file name, with a transparent background) and regenerating keeps yours. Delete a file to
 // get the generated one back.
 //
-// The materials are URP Unlit with Multiply blending: a decal darkens and tints the wall behind it,
+// The materials use the Escape Granny/Wall Decal (Multiply) shader: a decal darkens and tints the wall behind it,
 // so it always matches the wall's lighting (including the baked lightmaps) and never glows in the dark.
 // Multiply can only darken, so pale parts of a picture (like the torn plaster at a scratch's edge)
 // show up as a faint tint rather than lighter than the wall.
@@ -80,17 +80,26 @@ public static class WallGrimeTextures
     // wall underneath by the picture's colour (where the picture is see-through, the wall is unchanged).
     // So the decal always gets exactly the wall's lighting, baked lightmaps included, without being
     // lit itself. That's also cheaper than a lit material.
+    // Uses our own Wall Decal (Multiply) shader (Assets/_Game/Shaders). URP Unlit's Multiply mode
+    // fogged the see-through parts of each decal too, so at a distance every decal showed as a dark square.
     static void SetUpMultiply(Material mat, Texture2D texture)
     {
-        mat.shader = Shader.Find("Universal Render Pipeline/Unlit");
+        mat.shader = Shader.Find("Escape Granny/Wall Decal (Multiply)");
+        mat.shaderKeywords = new string[0]; // drop leftovers from the old URP Unlit setup
+        mat.renderQueue = -1;               // use the shader's (Transparent)
         mat.enableInstancing = true;
         mat.SetTexture("_BaseMap", texture);
         mat.SetColor("_BaseColor", Color.white);
-        mat.SetFloat("_Surface", (float)BaseShaderGUI.SurfaceType.Transparent);
-        mat.SetFloat("_Blend", (float)BaseShaderGUI.BlendMode.Multiply);
-        mat.SetFloat("_Cull", (float)CullMode.Back);
-        BaseShaderGUI.SetupMaterialBlendMode(mat); // URP's own setup, same as picking it in the Inspector
-        mat.SetShaderPassEnabled("ShadowCaster", false); // flat stains don't cast shadows
+    }
+
+    /// <summary>Updates the existing Wall Grime materials to the current setup, without moving any decals.</summary>
+    [MenuItem("Tools/Escape Granny/Wall Grime: Update Materials")]
+    public static void UpdateAllMaterials()
+    {
+        int count = 0;
+        foreach (Kind kind in System.Enum.GetValues(typeof(Kind))) count += Materials(kind).Count;
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[WallGrimeTextures] Updated {count} Wall Grime materials. No decals were moved.");
     }
 
     // ---------- saving ----------

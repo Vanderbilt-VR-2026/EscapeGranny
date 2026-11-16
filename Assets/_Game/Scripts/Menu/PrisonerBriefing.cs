@@ -19,10 +19,9 @@ public class PrisonerBriefing : MonoBehaviour
 
     [TextArea(4, 10)]
     [SerializeField] private string briefing =
-        "Find the key and use it to unlock the front door. You have {time}.\n" +
-        "Opening doors and drawers makes noise. So does dropping the key.\n" +
-        "Some floorboards creak. Granny is listening.\n" +
-        "Hide under beds and in wardrobes when she's close.";
+        "•  Find the key. Unlock the front door.\n" +
+        "•  You have {time}.\n" +
+        "•  Stay quiet. Granny is listening.";
 
     private void OnEnable()
     {
