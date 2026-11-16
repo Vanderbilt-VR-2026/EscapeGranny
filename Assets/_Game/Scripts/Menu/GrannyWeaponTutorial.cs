@@ -8,8 +8,8 @@
 // Optional video: give a weapon a Video Clip and it loops on the left of the screen, with the text
 // card moved to the right. A weapon without a clip shows the text on its own, as before.
 //
-// Setup: in MainMenu run Tools > Escape Granny > Build Granny Weapon Tutorial Panel, then
-// Tools > Escape Granny > Add Videos To Granny Tutorial (which also finds the Tutorial_*.mp4 clips).
+// Setup: Tools > Escape Granny > Build Main Menu adds this panel and its video area (and finds the
+// Tutorial_*.mp4 clips) through GrannyTutorialPanelBuilder.
 // (Or by hand: put this on GrannyTutorialPanel, drag in the Heading and body Text, and hook up
 //   READY Button OnClick -> GrannyWeaponTutorial.OnReadyPressed
 //   BACK  Button OnClick -> GrannyWeaponTutorial.OnBackPressed

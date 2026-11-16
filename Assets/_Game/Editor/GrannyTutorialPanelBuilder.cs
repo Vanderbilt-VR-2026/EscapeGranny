@@ -1,15 +1,18 @@
 // GrannyTutorialPanelBuilder.cs  (goes in an Editor folder, e.g. Assets/_Game/Editor/)
 //
-// Open MainMenu, then: Tools > Escape Granny > Build Granny Weapon Tutorial Panel
-// Copies the prisoner's briefing screen (so it looks identical), turns the copy into Granny's
-// weapon tutorial, wires its READY/BACK buttons, and plugs it into MenuController.
-// Nothing is saved automatically: check it, then press Cmd+S.
+// Adds Granny's weapon tutorial screen to the main menu: copies the prisoner's briefing screen (so it
+// looks identical), turns the copy into Granny's weapon tutorial, wires its READY/BACK buttons, plugs
+// it into MenuController, then adds the video area (video on the left, text on the right).
+//
+// How to use: nothing. Tools > Escape Granny > Build Main Menu runs it (AddTo) after building the
+// menu, and saves the scene. It used to be two separate Tools items that had to be run by hand after
+// every rebuild; forgetting them lost the tutorial.
 
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Events;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -20,34 +23,34 @@ public static class GrannyTutorialPanelBuilder
 {
     const string PanelName = "GrannyTutorialPanel";
 
-    [MenuItem("Tools/Escape Granny/Build Granny Weapon Tutorial Panel")]
-    static void Build()
+    // Builds the tutorial panel and its video area in the given (menu) scene. The caller saves the
+    // scene. Returns problems to show the user, or an empty string if everything worked.
+    public static string AddTo(Scene scene)
     {
-        var scene = SceneManager.GetActiveScene();
-        var roots = scene.GetRootGameObjects();
+        var problems = new List<string>();
+        var tutorial = BuildPanel(scene, problems);
+        if (tutorial != null) AddVideos(tutorial, problems);
+        return string.Join("\n", problems);
+    }
 
+    static GrannyWeaponTutorial BuildPanel(Scene scene, List<string> problems)
+    {
+        var roots = scene.GetRootGameObjects();
         var menu = roots.SelectMany(r => r.GetComponentsInChildren<MenuController>(true)).FirstOrDefault();
         var brief = roots.SelectMany(r => r.GetComponentsInChildren<PrisonerBriefing>(true)).FirstOrDefault();
         if (menu == null || brief == null)
         {
-            Dialog("Open the MainMenu scene first (it needs MenuController and the prisoner's briefing panel).");
-            return;
+            problems.Add("- Granny's tutorial was skipped: no MenuController or prisoner briefing panel in the scene.");
+            return null;
         }
 
         var parent = brief.transform.parent;
         var existing = parent.Find(PanelName);
-        if (existing != null)
-        {
-            if (!EditorUtility.DisplayDialog("Escape Granny",
-                    $"{PanelName} already exists. Replace it with a fresh copy of the prisoner's screen?", "Replace", "Cancel"))
-                return;
-            Undo.DestroyObjectImmediate(existing.gameObject);
-        }
+        if (existing != null) Object.DestroyImmediate(existing.gameObject);
 
         // Copy the prisoner's screen so the layout and style match exactly.
         bool wasActive = brief.gameObject.activeSelf;
         var panel = Object.Instantiate(brief.gameObject, parent);
-        Undo.RegisterCreatedObjectUndo(panel, "Build Granny Weapon Tutorial Panel");
         panel.name = PanelName;
         panel.transform.SetSiblingIndex(brief.transform.GetSiblingIndex() + 1);
         brief.gameObject.SetActive(wasActive);
@@ -57,8 +60,6 @@ public static class GrannyTutorialPanelBuilder
 
         var heading = FindText(panel.transform, "Heading");
         var body = FindText(panel.transform, "BriefCard/BriefingText");
-        var step = FindText(panel.transform, "Step");
-        if (step != null) step.text = "GET READY";
         if (heading != null) heading.text = "HOW TO USE THE WEAPON";
         if (body != null) body.text = "(weapon tutorial text)";
 
@@ -68,34 +69,19 @@ public static class GrannyTutorialPanelBuilder
         so.FindProperty("bodyText").objectReferenceValue = body;
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        bool readyOk = Rewire(panel.transform.Find("ReadyButton"), tutorial.OnReadyPressed);
-        bool backOk = Rewire(panel.transform.Find("BackButton"), tutorial.OnBackPressed);
+        if (!Rewire(panel.transform.Find("ReadyButton"), tutorial.OnReadyPressed))
+            problems.Add("- Couldn't find the tutorial's ReadyButton; hook its OnClick to GrannyWeaponTutorial.OnReadyPressed by hand.");
+        if (!Rewire(panel.transform.Find("BackButton"), tutorial.OnBackPressed))
+            problems.Add("- Couldn't find the tutorial's BackButton; hook its OnClick to GrannyWeaponTutorial.OnBackPressed by hand.");
+        if (heading == null || body == null)
+            problems.Add("- Couldn't find the tutorial's Heading or BriefingText; drag them into GrannyWeaponTutorial by hand.");
 
         var mso = new SerializedObject(menu);
-        var field = mso.FindProperty("grannyTutorialPanel");
-        if (field == null)
-        {
-            Dialog("MenuController doesn't have a Granny Tutorial Panel field yet. Replace MenuController.cs with " +
-                   "the updated version, let Unity recompile, then run this again.");
-            Undo.DestroyObjectImmediate(panel);
-            return;
-        }
-        field.objectReferenceValue = panel;
-        mso.ApplyModifiedProperties();
+        mso.FindProperty("grannyTutorialPanel").objectReferenceValue = panel;
+        mso.ApplyModifiedPropertiesWithoutUndo();
 
         panel.SetActive(false);   // MenuController shows it when Granny confirms a weapon
-        EditorSceneManager.MarkSceneDirty(scene);
-        Selection.activeGameObject = panel;
-
-        string warn = "";
-        if (heading == null || body == null) warn += "\n- Couldn't find the Heading or BriefingText on the copy; drag them into GrannyWeaponTutorial by hand.";
-        if (!readyOk) warn += "\n- Couldn't find ReadyButton; hook its OnClick to GrannyWeaponTutorial.OnReadyPressed by hand.";
-        if (!backOk) warn += "\n- Couldn't find BackButton; hook its OnClick to GrannyWeaponTutorial.OnBackPressed by hand.";
-
-        Dialog("Built Granny's weapon tutorial screen (a copy of the prisoner's briefing), wired READY and BACK, " +
-               "and added it to MenuController." + warn +
-               "\n\nThe text for each weapon is on the GrannyWeaponTutorial component if you want to edit it." +
-               "\n\nPress Cmd+S to save.");
+        return tutorial;
     }
 
     // ---------- Videos ----------
@@ -107,34 +93,18 @@ public static class GrannyTutorialPanelBuilder
     static readonly Vector2 CardSizeWithVideo = new Vector2(400f, 252f);
     const float VideoBorder = 4f;
 
-    [MenuItem("Tools/Escape Granny/Add Videos To Granny Tutorial")]
-    static void AddVideos()
+    static void AddVideos(GrannyWeaponTutorial tutorial, List<string> problems)
     {
-        var scene = SceneManager.GetActiveScene();
-        var tutorial = scene.GetRootGameObjects()
-            .SelectMany(r => r.GetComponentsInChildren<GrannyWeaponTutorial>(true))
-            .FirstOrDefault();
-        if (tutorial == null)
-        {
-            Dialog("Couldn't find Granny's tutorial panel. Open MainMenu and run " +
-                   "\"Build Granny Weapon Tutorial Panel\" first.");
-            return;
-        }
-
         var panel = tutorial.transform;
         var card = panel.Find("BriefCard") as RectTransform;
         if (card == null)
         {
-            Dialog("Couldn't find BriefCard on the tutorial panel.");
+            problems.Add("- Granny's tutorial videos were skipped: no BriefCard on the tutorial panel.");
             return;
         }
 
-        var old = panel.Find("VideoFrame");
-        if (old != null) Undo.DestroyObjectImmediate(old.gameObject);
-
         // Frame (same colour as the text card) with the video inside it.
         var frame = new GameObject("VideoFrame", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        Undo.RegisterCreatedObjectUndo(frame, "Add Videos To Granny Tutorial");
         var frameRect = (RectTransform)frame.transform;
         frameRect.SetParent(panel, false);
         frameRect.SetSiblingIndex(card.GetSiblingIndex() + 1);
@@ -169,7 +139,6 @@ public static class GrannyTutorialPanelBuilder
         var body = card.Find("BriefingText")?.GetComponent<Text>();
         if (body != null)
         {
-            Undo.RecordObject(body, "Add Videos To Granny Tutorial");
             body.resizeTextForBestFit = true;
             body.resizeTextMinSize = 16;
             body.resizeTextMaxSize = Mathf.Max(body.fontSize, 26);
@@ -184,27 +153,19 @@ public static class GrannyTutorialPanelBuilder
         so.FindProperty("cardSizeWithVideo").vector2Value = CardSizeWithVideo;
 
         // Fill in any clips named Tutorial_Axe / _Knife / _Gun / _Bomb that are in the project.
-        var found = new System.Collections.Generic.List<string>();
-        var missing = new System.Collections.Generic.List<string>();
+        var missing = new List<string>();
         foreach (var (field, file) in new[] { ("axeVideo", "Tutorial_Axe"), ("knifeVideo", "Tutorial_Knife"),
                                               ("gunVideo", "Tutorial_Gun"), ("bombVideo", "Tutorial_Bomb") })
         {
-            var prop = so.FindProperty(field);
             var clip = FindClip(file);
-            if (clip != null) { prop.objectReferenceValue = clip; found.Add(file); }
-            else if (prop.objectReferenceValue == null) missing.Add(file);
+            if (clip != null) so.FindProperty(field).objectReferenceValue = clip;
+            else missing.Add(file);
         }
-        so.ApplyModifiedProperties();
+        so.ApplyModifiedPropertiesWithoutUndo();
+        if (missing.Count > 0)
+            problems.Add("- Tutorial videos not found (those weapons show text only): " + string.Join(", ", missing));
 
         frame.SetActive(false);   // the tutorial shows it when the picked weapon has a video
-        EditorSceneManager.MarkSceneDirty(scene);
-        Selection.activeGameObject = tutorial.gameObject;
-
-        Dialog("Added a video area to Granny's tutorial screen (video on the left, text on the right)." +
-               (found.Count > 0 ? "\n\nVideos found: " + string.Join(", ", found) : "") +
-               (missing.Count > 0 ? "\n\nNot found (those weapons show text only): " + string.Join(", ", missing) +
-                                    "\nPut the .mp4 files in the project, or drag clips into GrannyWeaponTutorial." : "") +
-               "\n\nPress Cmd+S to save.");
     }
 
     static VideoClip FindClip(string fileName)
@@ -227,14 +188,10 @@ public static class GrannyTutorialPanelBuilder
     {
         var button = t != null ? t.GetComponent<Button>() : null;
         if (button == null) return false;
-        Undo.RecordObject(button, "Rewire button");
         for (int i = button.onClick.GetPersistentEventCount() - 1; i >= 0; i--)
             UnityEventTools.RemovePersistentListener(button.onClick, i);
         UnityEventTools.AddPersistentListener(button.onClick, action);
-        EditorUtility.SetDirty(button);
         return true;
     }
-
-    static void Dialog(string msg) => EditorUtility.DisplayDialog("Escape Granny", msg, "OK");
 }
 #endif

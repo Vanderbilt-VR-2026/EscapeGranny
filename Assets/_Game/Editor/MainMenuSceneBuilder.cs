@@ -27,10 +27,12 @@
 //                              from RoleCardModelBuilder)
 //           GrannyLoadoutPanel Axe / Knife / Gun / Bomb cards + CONFIRM + BACK (WeaponLoadout)
 //           PrisonerBriefPanel briefing card + READY + BACK               (PrisonerBriefing)
+//           GrannyTutorialPanel weapon tutorial with video + READY + BACK (GrannyTutorialPanelBuilder)
 //     - XR Device Simulator, if its sample has been imported (keyboard and mouse fake VR for Macs).
 //       Tagged EditorOnly, so it's only in the Editor, never in a headset build.
-//   Then it applies the moodboard look (MenuThemeApplier) and puts the 3D weapon models on the
-//   loadout buttons (WeaponModelBuilder).
+//   Then it applies the moodboard look (MenuThemeApplier), puts the 3D weapon models on the
+//   loadout buttons (WeaponModelBuilder), adds Granny's weapon tutorial, and saves the scene.
+//   That's everything: no other tools to run and no Cmd+S needed.
 //
 //   This file decides WHERE things go; MenuThemeApplier decides colours, fonts and sizes, finding
 //   objects by the names given here (Glow, Corner, Divider, Step, Accent, Stats, Tag, ...).
@@ -179,11 +181,15 @@ public static class MainMenuSceneBuilder
         bool simulatorAdded = AddDeviceSimulator(scene);
         bool themed = MenuThemeApplier.Apply(canvas);
         int models = WeaponModelBuilder.AddModels(loadout);
+        // After the theme, so the tutorial copies the finished look of the prisoner's briefing.
+        string tutorialProblems = GrannyTutorialPanelBuilder.AddTo(scene);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         AssetDatabase.Refresh();
 
         string msg = "Built " + ScenePath + ". Press Play to try it.";
+        if (tutorialProblems.Length > 0)
+            msg += "\n\nGranny's weapon tutorial:\n" + tutorialProblems;
         if (!themed)
             msg += "\n\nThe moodboard theme was skipped: MenuTheme is missing a font (see the Console).";
         if (models < Weapons.Length)
