@@ -117,7 +117,7 @@ public class LocalPlayerRig : NetworkBehaviour
         // Move the player out of the hiding position.
         if (exitPoint != null)
         {
-            MoveTo(exitPoint);
+            MoveToFeet(exitPoint);
         }
 
         // Restore normal locomotion.
@@ -139,14 +139,17 @@ public class LocalPlayerRig : NetworkBehaviour
         Debug.Log("[Hide] Player exited hiding spot.");
     }
 
-    // Move the player's feet to the hiding or exit position.
+    
+    
+
+    // Move the headset to the hiding position.
     private void MoveTo(Transform target)
     {
         var origin = rig.xrOrigin;
 
         rig.characterController.enabled = false;
 
-        // Face the direction specified by the target.
+        // Face the direction specified by the hiding point.
         Vector3 flat = Vector3.ProjectOnPlane(
             target.forward,
             Vector3.up
@@ -160,43 +163,59 @@ public class LocalPlayerRig : NetworkBehaviour
             flat.normalized
         );
 
-        // Find the floor underneath the target.
-        Vector3 floorPos = target.position;
-
-        if (Physics.Raycast(
-            target.position + Vector3.up * 0.5f,
-            Vector3.down,
-            out var hit,
-            3f,
-            ~0,
-            QueryTriggerInteraction.Ignore))
-        {
-            floorPos = hit.point;
-
-            Debug.Log(
-                $"[Hide] Floor hit: {hit.collider.name} at Y={hit.point.y:F2}"
-            );
-        }
-        else
-        {
-            Debug.LogWarning(
-                "[Hide] No floor found under the point. Check the floor collider."
-            );
-        }
-
-        floorPos += Vector3.up * 0.05f;
-
-        // Preserve the headset's horizontal offset from the XR Origin.
-        Vector3 cam = origin.CameraInOriginSpacePos;
-
-        Vector3 offset = origin.Origin.transform.TransformVector(
-            new Vector3(cam.x, 0f, cam.z)
+        // Get the headset's complete position relative to the XR Origin.
+        Vector3 cameraOffset = origin.Origin.transform.TransformVector(
+            origin.CameraInOriginSpacePos
         );
 
-        origin.Origin.transform.position = floorPos - offset;
+        // Move the XR Origin so the headset reaches the hiding point.
+        origin.Origin.transform.position = target.position - cameraOffset;
 
         rig.characterController.enabled = true;
+
+        Debug.Log($"[Hide] Headset positioned at {target.position}");
     }
+
+
+    private void MoveToFeet(Transform target)
+    {
+        var origin = rig.xrOrigin;
+
+        rig.characterController.enabled = false;
+
+        // Face the direction specified by the exit point.
+        Vector3 flat = Vector3.ProjectOnPlane(
+            target.forward,
+            Vector3.up
+        );
+
+        if (flat.sqrMagnitude < 0.001f)
+            flat = Vector3.forward;
+
+        origin.MatchOriginUpCameraForward(
+            Vector3.up,
+            flat.normalized
+        );
+
+        // Get the headset's position relative to the XR Origin.
+        Vector3 cameraOffset = origin.Origin.transform.TransformVector(
+            origin.CameraInOriginSpacePos
+        );
+
+        // Calculate the headset's vertical height above the XR Origin.
+        float headsetHeight = cameraOffset.y;
+
+        // Position the XR Origin so the player's feet
+        // are at the ExitPoint.
+        origin.Origin.transform.position =
+            target.position - cameraOffset +
+            Vector3.up * headsetHeight;
+
+        rig.characterController.enabled = true;
+
+        Debug.Log($"[Exit] Player feet positioned at {target.position}");
+    }
+
 
     // Enable or disable regular VR locomotion.
     private void SetLocomotion(bool on)
